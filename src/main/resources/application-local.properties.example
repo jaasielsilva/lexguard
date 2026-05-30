@@ -1,0 +1,18 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# LexGuard — Configuração local (SEGREDOS)
+#
+# 1. Copie este arquivo para o mesmo diretório com o nome:
+#       application-local.properties
+# 2. Preencha os valores abaixo.
+# 3. NUNCA commite application-local.properties no Git.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Senha do MySQL (usuário configurado em application.properties, padrão: root)
+spring.datasource.password=your_mysql_password
+
+# Chave JWT (HS512) — gere com:
+#   openssl rand -base64 64
+jwt.secret=your_base64_jwt_secret_here
+
+# Senha do super admin criado na 1ª inicialização (login: superadmin)
+app.superadmin.password=ChangeMe@2025!
