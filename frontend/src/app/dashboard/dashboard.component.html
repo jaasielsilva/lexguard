@@ -14,7 +14,7 @@
 
     <!-- Loading skeleton -->
     <div class="cards-grid" *ngIf="loading">
-        <div class="card skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+        <div class="card skeleton" *ngFor="let i of [1,2,3,4,5,6,7]">
             <div class="skeleton-icon"></div>
             <div class="skeleton-lines">
                 <div class="skeleton-line short"></div>
@@ -30,7 +30,7 @@
         <button class="btn-refresh" (click)="loadMetrics()">Tentar novamente</button>
     </div>
 
-    <!-- Metric cards -->
+    <!-- Metric cards + LGPD Health Score na mesma grid -->
     <div class="cards-grid" *ngIf="!loading && !error">
         <div class="card metric-card" *ngFor="let card of cards" [class]="'card--' + card.color">
             <div class="card-icon">
@@ -42,6 +42,9 @@
                 <span class="card-desc">{{ card.description }}</span>
             </div>
         </div>
+
+        <!-- LGPD Health Score — mesmo estilo dos outros cards -->
+        <app-lgpd-health-score class="card"></app-lgpd-health-score>
     </div>
 
     <!-- LGPD Compliance Score -->

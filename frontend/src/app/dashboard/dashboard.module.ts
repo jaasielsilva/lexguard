@@ -5,6 +5,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { DashboardComponent } from './dashboard.component';
 import { ShellComponent } from './shell/shell.component';
+import { LgpdHealthScoreComponent } from './components/lgpd-health-score/lgpd-health-score.component';
 
 const routes: Routes = [
     {
@@ -49,7 +50,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-    declarations: [DashboardComponent, ShellComponent],
+    declarations: [DashboardComponent, ShellComponent, LgpdHealthScoreComponent],
     imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterModule.forChild(routes)],
 })
 export class DashboardModule { }

@@ -1,0 +1,41 @@
+<!-- Skeleton -->
+<ng-container *ngIf="loading">
+    <div class="lgpd-skeleton lgpd-skeleton--icon"></div>
+    <div class="lgpd-body">
+        <div class="lgpd-skeleton lgpd-skeleton--val"></div>
+        <div class="lgpd-skeleton lgpd-skeleton--lbl"></div>
+        <div class="lgpd-skeleton lgpd-skeleton--desc"></div>
+    </div>
+</ng-container>
+
+<!-- Erro -->
+<ng-container *ngIf="!loading && error">
+    <div class="lgpd-icon-wrap lgpd-icon-wrap--err">
+        <i class="bi bi-shield-x" aria-hidden="true"></i>
+    </div>
+    <div class="lgpd-body">
+        <span class="lgpd-value lgpd-value--err">—</span>
+        <span class="lgpd-label">LGPD Health Score</span>
+        <span class="lgpd-desc">Erro ao carregar</span>
+    </div>
+</ng-container>
+
+<!-- Conteúdo -->
+<ng-container *ngIf="!loading && !error && score">
+    <div class="lgpd-icon-wrap">
+        <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+    </div>
+    <div class="lgpd-body">
+        <span class="lgpd-value" [attr.aria-label]="'Score LGPD: ' + animatedScore + ' de 100'">
+            {{ animatedScore }}<span class="lgpd-max">/100</span>
+        </span>
+        <span class="lgpd-label">LGPD Health Score</span>
+        <span class="lgpd-desc">
+            <span class="lgpd-badge" [ngClass]="statusClass">{{ statusLabel }}</span>
+        </span>
+    </div>
+    <div class="lgpd-progress-track" role="progressbar" [attr.aria-valuenow]="score.score" aria-valuemin="0"
+        aria-valuemax="100">
+        <div class="lgpd-progress-fill" [ngClass]="progressClass" [style.width.%]="animatedScore"></div>
+    </div>
+</ng-container>
