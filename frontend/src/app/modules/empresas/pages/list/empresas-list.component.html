@@ -1,0 +1,182 @@
+<div class="module-page">
+
+    <!-- Cabeçalho -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Empresas</h1>
+            <p class="page-subtitle">Gestão de tenants da plataforma LexGuard</p>
+        </div>
+        <button class="btn-primary" (click)="abrirNovo()">
+            <i class="bi bi-plus-lg"></i> Nova Empresa
+        </button>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
+                placeholder="Buscar por nome, CNPJ ou e-mail..." />
+        </div>
+        <span class="count">{{ filtered.length }} empresa(s)</span>
+    </div>
+
+    <!-- Feedback -->
+    <div class="alert-success" *ngIf="success">
+        <i class="bi bi-check-circle-fill"></i> {{ success }}
+    </div>
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <!-- Skeleton -->
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="filtered.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>CNPJ</th>
+                    <th>E-mail de contato</th>
+                    <th>Status</th>
+                    <th>Cadastro</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let e of filtered" [class.row-inactive]="!e.ativo">
+                    <td class="mono text-muted">{{ e.id }}</td>
+                    <td><strong>{{ e.nome }}</strong></td>
+                    <td class="mono">{{ formatCnpj(e.cnpj) }}</td>
+                    <td>{{ e.contatoEmail }}</td>
+                    <td>
+                        <span class="badge" [class.badge-green]="e.ativo" [class.badge-gray]="!e.ativo">
+                            {{ e.ativo ? 'Ativa' : 'Inativa' }}
+                        </span>
+                    </td>
+                    <td class="text-muted">{{ e.createdAt | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                        <div class="action-btns">
+                            <button class="btn-icon" title="Editar" (click)="abrirEdicao(e)">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn-icon" [title]="e.ativo ? 'Desativar' : 'Ativar'"
+                                [class.btn-icon--danger]="e.ativo" [class.btn-icon--success]="!e.ativo"
+                                (click)="abrirConfirm(e)">
+                                <i [class]="e.ativo ? 'bi bi-toggle-on' : 'bi bi-toggle-off'"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-building"></i>
+                <p>Nenhuma empresa encontrada.</p>
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- ── Modal: Cadastro / Edição ──────────────────────────────────────────── -->
+    <div class="modal-overlay" *ngIf="formVisivel" (click)="cancelarFormulario()">
+        <div class="modal-box modal-box--form" (click)="$event.stopPropagation()">
+
+            <h3>{{ editando ? 'Editar Empresa' : 'Nova Empresa' }}</h3>
+            <p class="modal-subtitle">
+                {{ editando ? 'Atualize os dados da empresa' : 'Cadastre um novo tenant na plataforma' }}
+            </p>
+
+            <div class="alert-error" *ngIf="formError">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ formError }}
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                <div class="form-grid">
+
+                    <div class="field-group field-group--full"
+                        [class.field-error]="f['nome'].invalid && f['nome'].touched">
+                        <label>Razão Social *</label>
+                        <input type="text" formControlName="nome" placeholder="Nome da empresa" />
+                        <span class="field-hint" *ngIf="f['nome'].invalid && f['nome'].touched">
+                            Nome é obrigatório (mín. 3 caracteres).
+                        </span>
+                    </div>
+
+                    <div class="field-group" [class.field-error]="f['cnpj'].invalid && f['cnpj'].touched">
+                        <label>CNPJ *</label>
+                        <input type="text" formControlName="cnpj" placeholder="00.000.000/0001-00 ou 00000000000100" />
+                        <span class="field-hint" *ngIf="f['cnpj'].invalid && f['cnpj'].touched">
+                            CNPJ inválido. Use 14 dígitos ou formato XX.XXX.XXX/XXXX-XX.
+                        </span>
+                    </div>
+
+                    <div class="field-group"
+                        [class.field-error]="f['contatoEmail'].invalid && f['contatoEmail'].touched">
+                        <label>E-mail de contato *</label>
+                        <input type="email" formControlName="contatoEmail" placeholder="contato@empresa.com.br" />
+                        <span class="field-hint" *ngIf="f['contatoEmail'].invalid && f['contatoEmail'].touched">
+                            E-mail válido é obrigatório.
+                        </span>
+                    </div>
+
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" (click)="cancelarFormulario()" [disabled]="saving">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary" [disabled]="saving">
+                        <span *ngIf="!saving">
+                            <i class="bi bi-check-lg"></i>
+                            {{ editando ? 'Salvar alterações' : 'Cadastrar' }}
+                        </span>
+                        <span *ngIf="saving"><span class="spinner-sm"></span> Salvando...</span>
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+    <!-- ── Modal: Confirmar toggle ativo ─────────────────────────────────────── -->
+    <div class="modal-overlay" *ngIf="confirmVisivel" (click)="cancelarConfirm()">
+        <div class="modal-box" (click)="$event.stopPropagation()">
+
+            <div class="confirm-icon" [class.confirm-icon--danger]="confirmTarget?.ativo"
+                [class.confirm-icon--success]="!confirmTarget?.ativo">
+                <i [class]="confirmTarget?.ativo ? 'bi bi-slash-circle' : 'bi bi-check-circle'"></i>
+            </div>
+
+            <h3>{{ confirmTarget?.ativo ? 'Desativar empresa?' : 'Ativar empresa?' }}</h3>
+            <p>
+                <strong>{{ confirmTarget?.nome }}</strong> será
+                {{ confirmTarget?.ativo ? 'desativada' : 'reativada' }}.
+                {{ confirmTarget?.ativo
+                ? 'Usuários desta empresa não conseguirão mais acessar o sistema.'
+                : 'Os usuários poderão voltar a acessar o sistema.' }}
+            </p>
+
+            <div class="modal-actions">
+                <button class="btn-secondary" (click)="cancelarConfirm()" [disabled]="confirmLoading">
+                    Cancelar
+                </button>
+                <button [class]="confirmTarget?.ativo ? 'btn-danger' : 'btn-primary'" (click)="confirmarToggle()"
+                    [disabled]="confirmLoading">
+                    <span *ngIf="!confirmLoading">
+                        {{ confirmTarget?.ativo ? 'Sim, desativar' : 'Sim, ativar' }}
+                    </span>
+                    <span *ngIf="confirmLoading"><span class="spinner-sm"></span> Aguarde...</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+</div>

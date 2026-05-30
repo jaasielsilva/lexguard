@@ -1,6 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { DashboardMetrics } from './models/dashboard.models';
+import { ComplianceScore } from './models/compliance.models';
 import { DashboardService } from './services/dashboard.service';
+import { ComplianceService } from './services/compliance.service';
 
 interface MetricCard {
     label: string;
@@ -17,12 +20,16 @@ interface MetricCard {
 })
 export class DashboardComponent implements OnInit {
     metrics: DashboardMetrics | null = null;
+    compliance: ComplianceScore | null = null;
     loading = true;
     error = '';
 
     cards: MetricCard[] = [];
 
-    constructor(private dashboardService: DashboardService) { }
+    constructor(
+        private dashboardService: DashboardService,
+        private complianceService: ComplianceService,
+    ) { }
 
     ngOnInit(): void {
         this.loadMetrics();
@@ -32,10 +39,14 @@ export class DashboardComponent implements OnInit {
         this.loading = true;
         this.error = '';
 
-        this.dashboardService.getMetrics().subscribe({
-            next: (data) => {
-                this.metrics = data;
-                this.buildCards(data);
+        forkJoin({
+            metrics: this.dashboardService.getMetrics(),
+            compliance: this.complianceService.getScore(),
+        }).subscribe({
+            next: ({ metrics, compliance }) => {
+                this.metrics = metrics;
+                this.compliance = compliance;
+                this.buildCards(metrics);
                 this.loading = false;
             },
             error: () => {
@@ -43,6 +54,20 @@ export class DashboardComponent implements OnInit {
                 this.loading = false;
             },
         });
+    }
+
+    get scoreColor(): string {
+        if (!this.compliance) return 'gray';
+        if (this.compliance.score >= 80) return '#22c55e';
+        if (this.compliance.score >= 50) return '#f59e0b';
+        return '#ef4444';
+    }
+
+    get scoreStatusClass(): string {
+        if (!this.compliance) return '';
+        if (this.compliance.score >= 80) return 'score--low';
+        if (this.compliance.score >= 50) return 'score--medium';
+        return 'score--critical';
     }
 
     private buildCards(m: DashboardMetrics): void {

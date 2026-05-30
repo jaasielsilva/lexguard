@@ -11,6 +11,8 @@ interface NavItem {
     route: string;
     /** Permissoes necessarias (qualquer uma). Vazio = so autenticado. */
     permissions?: PermissionCode[];
+    /** Visível apenas para SUPER_ADMIN */
+    superAdminOnly?: boolean;
 }
 
 @Component({
@@ -31,6 +33,7 @@ export class ShellComponent implements OnInit {
         { label: 'Auditoria', icon: 'bi-shield-check', route: '/dashboard/auditoria', permissions: ['AUDIT_READ'] },
         { label: 'Usuários', icon: 'bi-person-gear', route: '/dashboard/usuarios', permissions: ['USER_MANAGE'] },
         { label: 'Perfis', icon: 'bi-key', route: '/dashboard/usuarios/perfis', permissions: ['USER_MANAGE'] },
+        { label: 'Empresas', icon: 'bi-building', route: '/dashboard/empresas', superAdminOnly: true },
     ];
 
     navItems: NavItem[] = [];
@@ -43,9 +46,12 @@ export class ShellComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.navItems = this.allNavItems.filter(item =>
-            !item.permissions || this.permissions.hasAnyPermission(...item.permissions),
-        );
+        this.navItems = this.allNavItems.filter(item => {
+            if (item.superAdminOnly) {
+                return this.permissions.getRoles().includes('SUPER_ADMIN');
+            }
+            return !item.permissions || this.permissions.hasAnyPermission(...item.permissions);
+        });
         const roles = this.permissions.getRoles();
         const primary = roles.find(r => r !== 'USER') ?? roles[0];
         this.displayRole = primary ? (ROLE_LABELS[primary] ?? primary) : '';

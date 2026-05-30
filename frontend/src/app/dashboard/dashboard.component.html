@@ -44,6 +44,97 @@
         </div>
     </div>
 
+    <!-- LGPD Compliance Score -->
+    <div class="compliance-panel" *ngIf="!loading && compliance">
+
+        <div class="compliance-header">
+            <h2 class="compliance-title">
+                <i class="bi bi-shield-check"></i>
+                LGPD Compliance Score
+            </h2>
+            <button class="btn-refresh" (click)="loadMetrics()" title="Recalcular">
+                <i class="bi bi-arrow-clockwise"></i>
+                Recalcular
+            </button>
+        </div>
+
+        <div class="compliance-body">
+
+            <!-- Score principal -->
+            <div class="score-circle" [ngClass]="scoreStatusClass">
+                <span class="score-value">{{ compliance.score }}</span>
+                <span class="score-max">/100</span>
+                <span class="score-status">{{ compliance.status }}</span>
+            </div>
+
+            <!-- Breakdown de riscos -->
+            <div class="risk-breakdown">
+                <div class="risk-item">
+                    <span class="risk-label">
+                        <i class="bi bi-lock-fill"></i> Segurança
+                    </span>
+                    <div class="risk-bar-track">
+                        <div class="risk-bar risk-bar--security"
+                            [style.width.%]="(compliance.riscoSeguranca / 50) * 100">
+                        </div>
+                    </div>
+                    <span class="risk-value">-{{ compliance.riscoSeguranca }}</span>
+                </div>
+                <div class="risk-item">
+                    <span class="risk-label">
+                        <i class="bi bi-file-earmark-check"></i> Consentimento
+                    </span>
+                    <div class="risk-bar-track">
+                        <div class="risk-bar risk-bar--consent"
+                            [style.width.%]="(compliance.riscoConsentimento / 55) * 100">
+                        </div>
+                    </div>
+                    <span class="risk-value">-{{ compliance.riscoConsentimento }}</span>
+                </div>
+                <div class="risk-item">
+                    <span class="risk-label">
+                        <i class="bi bi-journal-text"></i> Auditoria
+                    </span>
+                    <div class="risk-bar-track">
+                        <div class="risk-bar risk-bar--audit" [style.width.%]="(compliance.riscoAuditoria / 20) * 100">
+                        </div>
+                    </div>
+                    <span class="risk-value">-{{ compliance.riscoAuditoria }}</span>
+                </div>
+                <div class="risk-item">
+                    <span class="risk-label">
+                        <i class="bi bi-book"></i> Legal
+                    </span>
+                    <div class="risk-bar-track">
+                        <div class="risk-bar risk-bar--legal" [style.width.%]="(compliance.riscoLegal / 25) * 100">
+                        </div>
+                    </div>
+                    <span class="risk-value">-{{ compliance.riscoLegal }}</span>
+                </div>
+            </div>
+
+            <!-- Alertas -->
+            <div class="alerts-panel" *ngIf="compliance.alertas.length > 0">
+                <h3 class="alerts-title">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    Alertas ({{ compliance.alertas.length }})
+                </h3>
+                <ul class="alerts-list">
+                    <li *ngFor="let alerta of compliance.alertas" class="alert-item">
+                        <i class="bi bi-dot"></i>
+                        {{ alerta }}
+                    </li>
+                </ul>
+            </div>
+
+            <div class="alerts-panel alerts-panel--ok" *ngIf="compliance.alertas.length === 0">
+                <i class="bi bi-check-circle-fill"></i>
+                Nenhum alerta de compliance identificado.
+            </div>
+
+        </div>
+    </div>
+
     <!-- Info banner -->
     <div class="info-banner" *ngIf="!loading && metrics">
         <i class="bi bi-info-circle-fill"></i>
