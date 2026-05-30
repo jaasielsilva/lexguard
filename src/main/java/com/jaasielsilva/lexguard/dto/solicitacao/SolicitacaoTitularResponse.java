@@ -16,6 +16,7 @@ public class SolicitacaoTitularResponse {
 
     private Long id;
     private Long titularId;
+    private String titularNome;
     private RightRequestType tipo;
     private String descricao;
     private RequestStatus status;

@@ -20,3 +20,11 @@ export interface TitularResponse {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface TitularSearchPage {
+    items: TitularResponse[];
+    totalElements: number;
+    page: number;
+    size: number;
+    hasMore: boolean;
+}

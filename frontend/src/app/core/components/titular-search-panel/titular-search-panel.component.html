@@ -1,0 +1,56 @@
+<div class="titular-search-panel" [class.titular-search-panel--embedded]="embedded">
+    <label class="titular-search-panel__label" [attr.for]="inputId">{{ label }}</label>
+
+    <div class="titular-search-panel__selected" *ngIf="selected">
+        <div class="selected-card">
+            <i class="bi bi-person-check-fill"></i>
+            <div class="selected-card__text">
+                <strong>{{ selected.nome }}</strong>
+                <span>{{ selected.cpf }} · {{ selected.email }}</span>
+            </div>
+            <button type="button" class="selected-card__clear" (click)="clearSelection()"
+                aria-label="Trocar titular">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="titular-search-panel__field" *ngIf="!selected">
+        <div class="search-input-wrap">
+            <i class="bi bi-search search-input-wrap__icon"></i>
+            <input #searchInput [id]="inputId" type="search" class="search-input-wrap__input"
+                [(ngModel)]="query" (ngModelChange)="onQueryChange()" (focus)="onFocus()"
+                placeholder="Nome, CPF ou e-mail (min. 2 caracteres)..." autocomplete="off"
+                role="combobox" [attr.aria-expanded]="panelOpen" [attr.aria-controls]="inputId + '-results'" />
+            <span class="search-input-wrap__spinner" *ngIf="searching" aria-hidden="true"></span>
+        </div>
+
+        <div [id]="inputId + '-results'" class="search-dropdown" *ngIf="panelOpen" role="listbox">
+            <p class="search-dropdown__hint" *ngIf="query.trim().length < 2">
+                Digite pelo menos 2 caracteres para buscar no servidor.
+            </p>
+
+            <p class="search-dropdown__error" *ngIf="searchError">{{ searchError }}</p>
+
+            <p class="search-dropdown__hint" *ngIf="query.trim().length >= 2 && !searching && results.length === 0 && !searchError">
+                Nenhum titular encontrado.
+            </p>
+
+            <p class="search-dropdown__meta" *ngIf="results.length > 0">
+                {{ totalElements }} encontrado(s) — exibindo {{ results.length }}
+            </p>
+
+            <button type="button" class="search-dropdown__item" *ngFor="let t of results"
+                (click)="selectTitular(t)" role="option">
+                <span class="search-dropdown__name">{{ t.nome }}</span>
+                <span class="search-dropdown__meta-line">{{ t.cpf }} · {{ t.email }}</span>
+            </button>
+
+            <button type="button" class="search-dropdown__more" *ngIf="hasMore && !searching"
+                (click)="loadMore()">
+                Carregar mais resultados
+            </button>
+            <p class="search-dropdown__loading" *ngIf="searching && results.length > 0">Carregando...</p>
+        </div>
+    </div>
+</div>

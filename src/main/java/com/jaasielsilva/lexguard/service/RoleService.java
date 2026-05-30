@@ -29,7 +29,7 @@ public class RoleService {
 
     public List<RoleResponse> listAll() {
         Long empresaId = requireEmpresaId();
-        standardRolesProvisioner.ensureForEmpresa(empresaId);
+        standardRolesProvisioner.ensureRolesExist(empresaId);
         return roleRepository.findAllByEmpresaIdOrderByNameAsc(empresaId).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -50,13 +50,14 @@ public class RoleService {
             throw new BadRequestException("O perfil SUPER_ADMIN nao pode ser alterado pela API");
         }
 
-        role.setPermissions(new HashSet<>(request.getPermissions()));
-        role = roleRepository.save(role);
+        role.getPermissions().clear();
+        role.getPermissions().addAll(request.getPermissions());
+        role = roleRepository.saveAndFlush(role);
         return toResponse(role);
     }
 
     public Role requireAssignableRole(String roleName, Long empresaId) {
-        standardRolesProvisioner.ensureForEmpresa(empresaId);
+        standardRolesProvisioner.ensureRolesExist(empresaId);
         if (StandardRoleTemplates.isNonAssignable(roleName)) {
             throw new BadRequestException("Perfil nao pode ser atribuido: " + roleName);
         }

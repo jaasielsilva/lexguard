@@ -2,6 +2,7 @@ package com.jaasielsilva.lexguard.controller;
 
 import com.jaasielsilva.lexguard.dto.dados.DadoPessoalRequest;
 import com.jaasielsilva.lexguard.dto.dados.DadoPessoalResponse;
+import com.jaasielsilva.lexguard.security.SecurityUtils;
 import com.jaasielsilva.lexguard.service.DadoPessoalService;
 import com.jaasielsilva.lexguard.tenant.TenantContext;
 import jakarta.validation.Valid;
@@ -46,11 +47,11 @@ public class DadoPessoalController {
     @PreAuthorize("hasAuthority('DATA_READ')")
     public ResponseEntity<Set<DadoPessoalResponse>> listDados(
             @RequestHeader("X-Empresa-Id") Long empresaId,
-            @RequestHeader("X-Usuario") String usuario,
             @PathVariable Long titularId) {
         TenantContext.setEmpresaId(empresaId);
         try {
-            return ResponseEntity.ok(dadoPessoalService.listByTitular(titularId, usuario));
+            return ResponseEntity.ok(
+                    dadoPessoalService.listByTitular(titularId, SecurityUtils.getCurrentUsername()));
         } finally {
             TenantContext.clear();
         }

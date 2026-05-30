@@ -2,52 +2,126 @@
     <div class="page-header">
         <div>
             <h1 class="page-title">Dados Pessoais</h1>
-            <p class="page-subtitle">Campos de dados vinculados aos titulares</p>
+            <p class="page-subtitle">Inventario de campos tratados por titular</p>
         </div>
+        <button *ngIf="canCreate" type="button" class="btn-primary" (click)="abrirFormulario()"
+            [disabled]="!titularId">
+            <i class="bi bi-plus-lg"></i> Novo campo de dado
+        </button>
     </div>
 
-    <div class="toolbar">
-        <label class="select-label">Titular</label>
-        <select [(ngModel)]="titularId" (ngModelChange)="load()">
-            <option *ngFor="let t of titulares" [ngValue]="t.id">{{ t.nome }}</option>
-        </select>
-        <span class="count">{{ dados.length }} registro(s)</span>
+    <div class="alert-success" *ngIf="success">
+        <i class="bi bi-check-circle-fill"></i> {{ success }}
     </div>
+
+    <app-titular-search-panel (titularChange)="onTitularChange($event)"></app-titular-search-panel>
 
     <div class="alert-error" *ngIf="error">
         <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="!titularId && !error">
+        <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <p>Localize um cliente para visualizar ou cadastrar dados pessoais.</p>
+        </div>
     </div>
 
     <div class="table-card" *ngIf="loading">
         <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
     </div>
 
-    <div class="table-card" *ngIf="!loading && !error">
+    <div class="table-card" *ngIf="!loading && !error && titularId">
         <table class="data-table" *ngIf="dados.length > 0; else empty">
             <thead>
                 <tr>
                     <th>Campo</th>
-                    <th>Classificação</th>
+                    <th>Valor</th>
+                    <th>Classificacao</th>
                     <th>Base legal</th>
+                    <th>Finalidade</th>
                     <th>Risco</th>
-                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngFor="let d of dados">
                     <td><strong>{{ d.nomeCampo }}</strong></td>
+                    <td>{{ d.valor }}</td>
                     <td>{{ d.classificacao }}</td>
                     <td>{{ d.baseLegal }}</td>
+                    <td>{{ d.finalidade }}</td>
                     <td>{{ d.risco }}</td>
-                    <td>{{ d.ativo ? 'Ativo' : 'Inativo' }}</td>
                 </tr>
             </tbody>
         </table>
         <ng-template #empty>
             <div class="empty-state">
                 <i class="bi bi-database-lock"></i>
-                <p>Nenhum dado pessoal encontrado para este titular.</p>
+                <p>Nenhum dado pessoal para este titular.</p>
+                <p class="empty-hint" *ngIf="dados.length === 0">
+                    Clique em <strong>Novo campo de dado</strong> para cadastrar.
+                </p>
+                <button *ngIf="canCreate && dados.length === 0" type="button" class="btn-primary" (click)="abrirFormulario()">
+                    Cadastrar primeiro campo
+                </button>
             </div>
         </ng-template>
+    </div>
+
+    <div class="modal-overlay" *ngIf="formVisivel" (click)="cancelarFormulario()">
+        <div class="modal-box modal-box--form" (click)="$event.stopPropagation()">
+            <h3>Novo dado pessoal</h3>
+            <p class="modal-subtitle" *ngIf="titularSelecionado">Titular: {{ titularSelecionado.nome }}</p>
+
+            <div class="alert-error" *ngIf="formError">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ formError }}
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                <div class="form-grid">
+                    <div class="field-group" [class.field-error]="f['nomeCampo'].invalid && f['nomeCampo'].touched">
+                        <label>Nome do campo *</label>
+                        <input type="text" formControlName="nomeCampo" placeholder="ex.: procuracao_ad_judicia" />
+                    </div>
+                    <div class="field-group" [class.field-error]="f['valor'].invalid && f['valor'].touched">
+                        <label>Valor *</label>
+                        <input type="text" formControlName="valor" />
+                    </div>
+                    <div class="field-group">
+                        <label>Classificacao *</label>
+                        <select formControlName="classificacao">
+                            <option *ngFor="let c of classificacoes" [value]="c">{{ c }}</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>Base legal *</label>
+                        <select formControlName="baseLegal">
+                            <option *ngFor="let b of basesLegais" [value]="b">{{ b }}</option>
+                        </select>
+                    </div>
+                    <div class="field-group field-group--full">
+                        <label>Finalidade *</label>
+                        <input type="text" formControlName="finalidade" placeholder="Para que este dado e usado" />
+                    </div>
+                    <div class="field-group">
+                        <label>Local de armazenamento</label>
+                        <input type="text" formControlName="localArmazenamento" />
+                    </div>
+                    <div class="field-group">
+                        <label>Risco *</label>
+                        <select formControlName="risco">
+                            <option *ngFor="let r of riscos" [value]="r">{{ r }}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" (click)="cancelarFormulario()" [disabled]="saving">Cancelar</button>
+                    <button type="submit" class="btn-primary" [disabled]="saving">
+                        <span *ngIf="!saving">Salvar</span>
+                        <span *ngIf="saving">Salvando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

@@ -4,25 +4,36 @@
             <h1 class="page-title">Consentimentos</h1>
             <p class="page-subtitle">Registros de consentimento por titular</p>
         </div>
+        <div class="page-header-actions">
+            <button *ngIf="canCreate" type="button" class="btn-primary" (click)="abrirFormulario()"
+                [disabled]="!titularId">
+                <i class="bi bi-plus-lg"></i> Novo consentimento
+            </button>
+        </div>
     </div>
 
-    <div class="toolbar">
-        <label class="select-label">Titular</label>
-        <select [(ngModel)]="titularId" (ngModelChange)="load()">
-            <option *ngFor="let t of titulares" [ngValue]="t.id">{{ t.nome }}</option>
-        </select>
-        <span class="count">{{ consentimentos.length }} registro(s)</span>
+    <div class="alert-success" *ngIf="success">
+        <i class="bi bi-check-circle-fill"></i> {{ success }}
     </div>
+
+    <app-titular-search-panel (titularChange)="onTitularChange($event)"></app-titular-search-panel>
 
     <div class="alert-error" *ngIf="error">
         <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="!titularId && !error">
+        <div class="empty-state">
+            <i class="bi bi-search"></i>
+            <p>Localize um cliente para visualizar ou registrar consentimentos.</p>
+        </div>
     </div>
 
     <div class="table-card" *ngIf="loading">
         <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
     </div>
 
-    <div class="table-card" *ngIf="!loading && !error">
+    <div class="table-card" *ngIf="!loading && !error && titularId">
         <table class="data-table" *ngIf="consentimentos.length > 0; else empty">
             <thead>
                 <tr>
@@ -38,16 +49,66 @@
                     <td><strong>{{ c.finalidade }}</strong></td>
                     <td>{{ c.baseLegal }}</td>
                     <td>{{ c.versaoTermo }}</td>
-                    <td>{{ c.aceiteEm | date:'short' }}</td>
-                    <td>{{ c.ativo ? 'Ativo' : 'Revogado' }}</td>
+                    <td class="mono">{{ c.aceiteEm | date:'short' }}</td>
+                    <td>
+                        <span class="badge" [class.badge-green]="c.ativo" [class.badge-gray]="!c.ativo">
+                            {{ c.ativo ? 'Ativo' : 'Revogado' }}
+                        </span>
+                    </td>
                 </tr>
             </tbody>
         </table>
         <ng-template #empty>
             <div class="empty-state">
                 <i class="bi bi-file-earmark-check"></i>
-                <p>Nenhum consentimento encontrado para este titular.</p>
+                <p>Nenhum consentimento para este titular.</p>
+                <p class="empty-hint" *ngIf="consentimentos.length === 0">
+                    Clique em <strong>Novo consentimento</strong> para cadastrar.
+                </p>
+                <button *ngIf="canCreate && consentimentos.length === 0" type="button" class="btn-primary"
+                    (click)="abrirFormulario()">
+                    Registrar consentimento
+                </button>
             </div>
         </ng-template>
+    </div>
+
+    <div class="modal-overlay" *ngIf="formVisivel" (click)="cancelarFormulario()">
+        <div class="modal-box modal-box--form" (click)="$event.stopPropagation()">
+            <h3>Novo consentimento</h3>
+            <p class="modal-subtitle" *ngIf="titularSelecionado">Titular: {{ titularSelecionado.nome }}</p>
+
+            <div class="alert-error" *ngIf="formError">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ formError }}
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                <div class="form-grid">
+                    <div class="field-group field-group--full">
+                        <label>Finalidade *</label>
+                        <input type="text" formControlName="finalidade"
+                            placeholder="ex.: marketing, cookies, compartilhamento com parceiros" />
+                    </div>
+                    <div class="field-group">
+                        <label>Base legal *</label>
+                        <select formControlName="baseLegal">
+                            <option *ngFor="let b of basesLegais" [value]="b">{{ b }}</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>Versão do termo *</label>
+                        <input type="text" formControlName="versaoTermo" placeholder="ex.: v1.0-2026" />
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" (click)="cancelarFormulario()"
+                        [disabled]="saving">Cancelar</button>
+                    <button type="submit" class="btn-primary" [disabled]="saving">
+                        <span *ngIf="!saving">Salvar</span>
+                        <span *ngIf="saving"><span class="spinner-sm"></span> Salvando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

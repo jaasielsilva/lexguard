@@ -24,7 +24,8 @@ export class TitularesListComponent implements OnInit {
         this.loading = true;
         this.service.list().subscribe({
             next: data => {
-                this.titulares = Array.isArray(data) ? data : Object.values(data);
+                const rows = Array.isArray(data) ? data : Object.values(data as Record<string, TitularResponse>);
+                this.titulares = rows.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
                 this.applyFilter();
                 this.loading = false;
             },
@@ -34,11 +35,13 @@ export class TitularesListComponent implements OnInit {
 
     applyFilter(): void {
         const q = this.search.toLowerCase();
-        this.filtered = this.titulares.filter(t =>
-            t.nome.toLowerCase().includes(q) ||
-            t.cpf.includes(q) ||
-            t.email.toLowerCase().includes(q)
-        );
+        this.filtered = this.titulares
+            .filter(t =>
+                t.nome.toLowerCase().includes(q) ||
+                t.cpf.includes(q) ||
+                t.email.toLowerCase().includes(q)
+            )
+            .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     }
 
     confirmDelete(id: number): void { this.deleteId = id; }

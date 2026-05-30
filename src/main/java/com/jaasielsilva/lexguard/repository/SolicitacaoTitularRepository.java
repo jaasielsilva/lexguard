@@ -10,5 +10,9 @@ public interface SolicitacaoTitularRepository extends JpaRepository<SolicitacaoT
 
     List<SolicitacaoTitular> findByEmpresaId(Long empresaId);
 
+    List<SolicitacaoTitular> findByEmpresaIdOrderBySolicitadoEmDesc(Long empresaId);
+
     List<SolicitacaoTitular> findByTitularIdAndEmpresaId(Long titularId, Long empresaId);
+
+    List<SolicitacaoTitular> findByTitularIdAndEmpresaIdOrderBySolicitadoEmDesc(Long titularId, Long empresaId);
 }

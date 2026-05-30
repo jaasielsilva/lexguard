@@ -10,6 +10,7 @@ export interface SolicitacaoRequest {
 export interface SolicitacaoResponse {
     id: number;
     titularId: number;
+    titularNome?: string;
     tipo: RightRequestType;
     descricao: string;
     status: RequestStatus;

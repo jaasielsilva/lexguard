@@ -2,10 +2,11 @@ package com.jaasielsilva.lexguard.controller;
 
 import com.jaasielsilva.lexguard.dto.titular.TitularRequest;
 import com.jaasielsilva.lexguard.dto.titular.TitularResponse;
+import com.jaasielsilva.lexguard.dto.titular.TitularSearchPageResponse;
 import com.jaasielsilva.lexguard.service.TitularService;
 import com.jaasielsilva.lexguard.tenant.TenantContext;
 import jakarta.validation.Valid;
-import java.util.Set;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -44,9 +46,24 @@ public class TitularController {
         }
     }
 
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('DATA_READ')")
+    public ResponseEntity<TitularSearchPageResponse> searchTitulares(
+            @RequestHeader("X-Empresa-Id") Long empresaId,
+            @RequestParam("q") String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "15") int size) {
+        TenantContext.setEmpresaId(empresaId);
+        try {
+            return ResponseEntity.ok(titularService.search(query, page, size));
+        } finally {
+            TenantContext.clear();
+        }
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('DATA_READ')")
-    public ResponseEntity<Set<TitularResponse>> listTitulares(@RequestHeader("X-Empresa-Id") Long empresaId) {
+    public ResponseEntity<List<TitularResponse>> listTitulares(@RequestHeader("X-Empresa-Id") Long empresaId) {
         TenantContext.setEmpresaId(empresaId);
         try {
             return ResponseEntity.ok(titularService.listAll());

@@ -36,11 +36,14 @@
                         <span *ngIf="r.name !== 'SUPER_ADMIN' && r.assignable">Atribuivel</span>
                         <span *ngIf="!r.assignable && r.name !== 'SUPER_ADMIN'">Sistema</span>
                     </td>
-                    <td>
-                        <button type="button" class="btn-secondary btn-sm" (click)="editar(r)"
-                            [disabled]="r.name === 'SUPER_ADMIN'">
-                            Editar permissoes
-                        </button>
+                    <td class="actions-cell">
+                        <div class="action-group" role="group" aria-label="Ações do perfil">
+                            <button type="button" class="btn-action btn-action--secondary" (click)="editar(r)"
+                                [disabled]="r.name === 'SUPER_ADMIN'">
+                                <i class="bi bi-sliders" aria-hidden="true"></i>
+                                Editar permissões
+                            </button>
+                        </div>
                     </td>
                 </tr>
             </tbody>

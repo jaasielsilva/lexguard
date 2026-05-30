@@ -4,16 +4,51 @@
             <h1 class="page-title">Solicitações</h1>
             <p class="page-subtitle">Pedidos de direitos dos titulares (LGPD)</p>
         </div>
+        <div class="page-header-actions" *ngIf="canManage">
+            <button type="button" class="btn-primary" (click)="abrirFormulario()">
+                <i class="bi bi-plus-lg"></i> Nova solicitação
+            </button>
+        </div>
     </div>
 
-    <div class="toolbar">
-        <div class="search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
-                placeholder="Buscar por tipo, status ou descrição..." />
-        </div>
-        <span class="count">{{ filtered.length }} registro(s)</span>
+    <div class="alert-success" *ngIf="success">
+        <i class="bi bi-check-circle-fill"></i> {{ success }}
     </div>
+
+    <section class="filters-card" aria-label="Filtros da fila de solicitações">
+        <div class="filters-card__head">
+            <h2 class="filters-card__title">Filtros</h2>
+            <span class="filters-card__count">{{ filtered.length }} de {{ solicitacoes.length }} na fila</span>
+            <button *ngIf="filtrosAtivos" type="button" class="filters-card__clear" (click)="limparFiltros()">
+                Limpar filtros
+            </button>
+        </div>
+
+        <div class="filter-chips" role="group" aria-label="Status">
+            <button *ngFor="let chip of statusChips" type="button" class="filter-chip"
+                [class.filter-chip--active]="statusFiltro === chip.id" (click)="setStatusFiltro(chip.id)">
+                {{ chip.label }}
+                <span class="filter-chip__count">{{ contagemStatus(chip.id) }}</span>
+            </button>
+        </div>
+
+        <div class="filters-card__grid">
+            <div>
+                <app-titular-search-panel #filtroTitularPanel [embedded]="true" label="Titular"
+                    (titularChange)="onTitularFiltroChange($event)"></app-titular-search-panel>
+                <span class="filters-card__hint">Opcional — restringe a fila a um cliente</span>
+            </div>
+            <div>
+                <label class="filters-card__label" for="solicitacoes-busca-texto">Busca na lista</label>
+                <div class="search-box">
+                    <i class="bi bi-search"></i>
+                    <input id="solicitacoes-busca-texto" type="search" [(ngModel)]="search"
+                        (ngModelChange)="applyFilter()" placeholder="Tipo ou descrição do pedido..." />
+                </div>
+                <span class="filters-card__hint">Refina o que já está carregado (não substitui o titular)</span>
+            </div>
+        </div>
+    </section>
 
     <div class="alert-error" *ngIf="error">
         <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
@@ -27,28 +62,116 @@
         <table class="data-table" *ngIf="filtered.length > 0; else empty">
             <thead>
                 <tr>
-                    <th>Titular ID</th>
+                    <th>Titular</th>
                     <th>Tipo</th>
                     <th>Status</th>
                     <th>Descrição</th>
                     <th>Solicitado em</th>
+                    <th *ngIf="canManage">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngFor="let s of filtered">
-                    <td>{{ s.titularId }}</td>
-                    <td><strong>{{ s.tipo }}</strong></td>
-                    <td>{{ s.status }}</td>
+                    <td><strong>{{ titularNome(s) }}</strong></td>
+                    <td><strong>{{ tipoLabel(s.tipo) }}</strong></td>
+                    <td>
+                        <span class="badge" [ngClass]="statusBadgeClass(s.status)">
+                            {{ statusLabel(s.status) }}
+                        </span>
+                    </td>
                     <td>{{ s.descricao }}</td>
-                    <td>{{ s.solicitadoEm | date:'short' }}</td>
+                    <td class="mono">{{ s.solicitadoEm | date:'short' }}</td>
+                    <td class="actions-cell" *ngIf="canManage">
+                        <div class="action-group" role="group" aria-label="Ações da solicitação">
+                            <button *ngIf="s.status === 'PENDENTE'" type="button"
+                                class="btn-action btn-action--secondary" (click)="emProcessamento(s)"
+                                title="Marcar em processamento" aria-label="Marcar em processamento">
+                                <i class="bi bi-hourglass-split" aria-hidden="true"></i>
+                                Em processamento
+                            </button>
+                            <button *ngIf="s.status === 'PENDENTE' || s.status === 'EM_PROCESSAMENTO'" type="button"
+                                class="btn-action btn-action--primary" (click)="abrirAtender(s)"
+                                title="Atender solicitação" aria-label="Atender solicitação">
+                                <i class="bi bi-check2-circle" aria-hidden="true"></i>
+                                Atender
+                            </button>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
         <ng-template #empty>
             <div class="empty-state">
                 <i class="bi bi-inbox"></i>
-                <p>Nenhuma solicitação encontrada.</p>
+                <p *ngIf="!filtroTitularAtivo">Nenhuma solicitação encontrada.</p>
+                <p *ngIf="filtroTitularAtivo">Nenhuma solicitação para este titular.</p>
+                <button *ngIf="filtrosAtivos" type="button" class="btn-secondary" (click)="limparFiltros()">
+                    Limpar filtros
+                </button>
             </div>
         </ng-template>
+    </div>
+
+    <div class="modal-overlay" *ngIf="formVisivel" (click)="cancelarFormulario()">
+        <div class="modal-box modal-box--form" (click)="$event.stopPropagation()">
+            <h3>Nova solicitação</h3>
+            <p class="modal-subtitle">Localize o titular e descreva o pedido de direito.</p>
+
+            <div class="alert-error" *ngIf="formError">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ formError }}
+            </div>
+
+            <app-titular-search-panel #modalTitularPanel label="Titular da solicitação *"
+                (titularChange)="onTitularFormChange($event)"></app-titular-search-panel>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                <div class="form-grid">
+                    <div class="field-group">
+                        <label>Tipo *</label>
+                        <select formControlName="tipo">
+                            <option *ngFor="let t of tipos" [value]="t">{{ t }}</option>
+                        </select>
+                    </div>
+                    <div class="field-group field-group--full"
+                        [class.field-error]="form.get('descricao')?.invalid && form.get('descricao')?.touched">
+                        <label>Descrição *</label>
+                        <textarea formControlName="descricao" rows="3"
+                            placeholder="Descreva o pedido do titular"></textarea>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" (click)="cancelarFormulario()"
+                        [disabled]="saving">Cancelar</button>
+                    <button type="submit" class="btn-primary" [disabled]="saving">
+                        <span *ngIf="!saving">Salvar</span>
+                        <span *ngIf="saving"><span class="spinner-sm"></span> Salvando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" *ngIf="atenderTarget">
+        <div class="modal-box modal-box--form" (click)="$event.stopPropagation()">
+            <h3>Atender solicitação</h3>
+            <p class="modal-subtitle" *ngIf="atenderTarget">
+                {{ titularNome(atenderTarget) }} — {{ atenderTarget.tipo }}
+            </p>
+            <div class="field-group field-group--full">
+                <label>Resposta ao titular *</label>
+                <textarea [(ngModel)]="respostaAtendimento" rows="4"
+                    placeholder="Descreva como o pedido foi atendido"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" (click)="cancelarAtender()" [disabled]="atendendo">
+                    Cancelar
+                </button>
+                <button type="button" class="btn-primary" (click)="confirmarAtender()"
+                    [disabled]="atendendo || !respostaAtendimento.trim()">
+                    <span *ngIf="!atendendo">Confirmar atendimento</span>
+                    <span *ngIf="atendendo"><span class="spinner-sm"></span> Salvando...</span>
+                </button>
+            </div>
+        </div>
     </div>
 </div>

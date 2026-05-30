@@ -2,18 +2,38 @@
     <div class="page-header">
         <div>
             <h1 class="page-title">Auditoria</h1>
-            <p class="page-subtitle">Trilha de auditoria do sistema</p>
+            <p class="page-subtitle">Trilha de eventos do sistema (carregamento paginado)</p>
         </div>
     </div>
 
-    <div class="toolbar">
-        <div class="search-box">
-            <i class="bi bi-search"></i>
-            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
-                placeholder="Buscar por ação, usuário ou descrição..." />
+    <section class="filters-card" aria-label="Filtros de auditoria">
+        <div class="filters-card__head">
+            <h2 class="filters-card__title">Filtros</h2>
+            <span class="filters-card__count">
+                {{ logs.length }} de {{ totalElements }} registro(s)
+            </span>
+            <button *ngIf="filtrosAtivos" type="button" class="filters-card__clear" (click)="limparFiltros()">
+                Limpar filtros
+            </button>
         </div>
-        <span class="count">{{ filtered.length }} registro(s)</span>
-    </div>
+
+        <div class="filter-chips" role="group" aria-label="Tipo de evento">
+            <button *ngFor="let chip of actionGroupChips" type="button" class="filter-chip"
+                [class.filter-chip--active]="actionGroup === chip.id" (click)="setActionGroup(chip.id)">
+                {{ chip.label }}
+            </button>
+        </div>
+
+        <div>
+            <label class="filters-card__label" for="auditoria-busca">Buscar eventos</label>
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input id="auditoria-busca" type="search" [(ngModel)]="search" (ngModelChange)="onSearchChange()"
+                    placeholder="Usuário, recurso ou descrição..." />
+            </div>
+            <span class="filters-card__hint">Consulta no servidor — use filtros para reduzir o volume</span>
+        </div>
+    </section>
 
     <div class="alert-error" *ngIf="error">
         <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
@@ -24,7 +44,7 @@
     </div>
 
     <div class="table-card" *ngIf="!loading && !error">
-        <table class="data-table" *ngIf="filtered.length > 0; else empty">
+        <table class="data-table" *ngIf="logs.length > 0; else empty">
             <thead>
                 <tr>
                     <th>Data</th>
@@ -35,19 +55,35 @@
                 </tr>
             </thead>
             <tbody>
-                <tr *ngFor="let l of filtered">
-                    <td>{{ l.timestamp | date:'short' }}</td>
-                    <td><strong>{{ l.action }}</strong></td>
+                <tr *ngFor="let l of logs">
+                    <td class="mono">{{ l.timestamp | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>
+                        <span class="badge" [ngClass]="actionBadgeClass(l.action)">
+                            {{ actionLabel(l.action) }}
+                        </span>
+                    </td>
                     <td>{{ l.usuario }}</td>
                     <td>{{ l.resource }}</td>
-                    <td>{{ l.descricao }}</td>
+                    <td class="cell-desc" [title]="l.descricao">{{ l.descricao }}</td>
                 </tr>
             </tbody>
         </table>
+
+        <div class="table-footer" *ngIf="logs.length > 0">
+            <button type="button" class="btn-secondary" (click)="loadMore()" [disabled]="!hasMore || loadingMore">
+                <span *ngIf="!loadingMore && hasMore">Carregar mais</span>
+                <span *ngIf="loadingMore"><span class="spinner-sm"></span> Carregando...</span>
+                <span *ngIf="!hasMore">Fim da lista</span>
+            </button>
+        </div>
+
         <ng-template #empty>
             <div class="empty-state">
                 <i class="bi bi-shield-check"></i>
                 <p>Nenhum registro de auditoria encontrado.</p>
+                <button *ngIf="filtrosAtivos" type="button" class="btn-secondary" (click)="limparFiltros()">
+                    Limpar filtros
+                </button>
             </div>
         </ng-template>
     </div>

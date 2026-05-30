@@ -2,13 +2,16 @@ package com.jaasielsilva.lexguard.service;
 
 import com.jaasielsilva.lexguard.dto.titular.TitularRequest;
 import com.jaasielsilva.lexguard.dto.titular.TitularResponse;
+import com.jaasielsilva.lexguard.dto.titular.TitularSearchPageResponse;
 import com.jaasielsilva.lexguard.exception.BadRequestException;
 import com.jaasielsilva.lexguard.exception.ResourceNotFoundException;
 import com.jaasielsilva.lexguard.model.Titular;
 import com.jaasielsilva.lexguard.repository.TitularRepository;
 import com.jaasielsilva.lexguard.tenant.TenantContext;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,12 +50,41 @@ public class TitularService {
         return mapToResponse(titular);
     }
 
-    public Set<TitularResponse> listAll() {
+    public List<TitularResponse> listAll() {
         Long empresaId = TenantContext.getEmpresaId();
-        return titularRepository.findAll().stream()
-                .filter(t -> t.getEmpresaId().equals(empresaId) && t.isAtivo())
+        if (empresaId == null) {
+            throw new BadRequestException("Empresa não informada");
+        }
+        return titularRepository.findByEmpresaIdAndAtivoTrueAndSoftDeletedFalseOrderByNomeAsc(empresaId)
+                .stream()
                 .map(this::mapToResponse)
-                .collect(Collectors.toSet());
+                .toList();
+    }
+
+    public TitularSearchPageResponse search(String query, int page, int size) {
+        Long empresaId = TenantContext.getEmpresaId();
+        if (empresaId == null) {
+            throw new BadRequestException("Empresa não informada");
+        }
+        String term = query == null ? "" : query.trim();
+        if (term.length() < 2) {
+            return new TitularSearchPageResponse(List.of(), 0, page, size, false);
+        }
+        int safeSize = Math.min(Math.max(size, 1), 50);
+        int safePage = Math.max(page, 0);
+        String termDigits = term.replaceAll("\\D", "");
+        Pageable pageable = PageRequest.of(safePage, safeSize);
+        Page<Titular> result = titularRepository.searchByEmpresa(empresaId, term, termDigits, pageable);
+        List<TitularResponse> items = result.getContent().stream()
+                .map(this::mapToResponse)
+                .toList();
+        boolean hasMore = result.getTotalElements() > (long) (safePage + 1) * safeSize;
+        return new TitularSearchPageResponse(
+                items,
+                result.getTotalElements(),
+                safePage,
+                safeSize,
+                hasMore);
     }
 
     public TitularResponse getById(Long id) {

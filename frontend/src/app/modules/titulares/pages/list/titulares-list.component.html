@@ -4,9 +4,11 @@
             <h1 class="page-title">Titulares</h1>
             <p class="page-subtitle">Gestão de titulares de dados pessoais</p>
         </div>
-        <a routerLink="novo" class="btn-primary">
-            <i class="bi bi-plus-lg"></i> Novo Titular
-        </a>
+        <div class="page-header-actions">
+            <a routerLink="novo" class="btn-primary">
+                <i class="bi bi-plus-lg"></i> Novo Titular
+            </a>
+        </div>
     </div>
 
     <div class="toolbar">
@@ -56,13 +58,16 @@
                             {{ t.ativo ? 'Ativo' : 'Inativo' }}
                         </span>
                     </td>
-                    <td class="actions">
-                        <a [routerLink]="['editar', t.id]" class="btn-icon" title="Editar">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <button class="btn-icon btn-icon-red" (click)="confirmDelete(t.id)" title="Excluir">
-                            <i class="bi bi-trash"></i>
-                        </button>
+                    <td class="actions-cell">
+                        <div class="action-group" role="group" aria-label="Ações do titular">
+                            <a [routerLink]="['editar', t.id]" class="btn-icon" title="Editar" aria-label="Editar titular">
+                                <i class="bi bi-pencil" aria-hidden="true"></i>
+                            </a>
+                            <button type="button" class="btn-icon btn-icon--danger" (click)="confirmDelete(t.id)"
+                                title="Excluir" aria-label="Excluir titular">
+                                <i class="bi bi-trash" aria-hidden="true"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             </tbody>
@@ -82,8 +87,8 @@
             <h3>Confirmar exclusão</h3>
             <p>O titular será desativado. Esta ação pode ser revertida pelo administrador.</p>
             <div class="modal-actions">
-                <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
-                <button class="btn-danger" (click)="doDelete()" [disabled]="deleting">
+                <button type="button" class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+                <button type="button" class="btn-danger" (click)="doDelete()" [disabled]="deleting">
                     <span *ngIf="!deleting">Excluir</span>
                     <span *ngIf="deleting"><span class="spinner-sm"></span> Excluindo...</span>
                 </button>

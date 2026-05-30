@@ -63,8 +63,10 @@ export class PerfilEditComponent implements OnInit {
         this.saving = true;
         this.error = '';
         this.service.updatePermissions(this.role.id, { permissions: [...this.selected] }).subscribe({
-            next: () => {
+            next: (updated) => {
                 this.saving = false;
+                this.role = updated;
+                this.selected = new Set(updated.permissions);
                 this.success = 'Permissoes atualizadas. Usuarios com este perfil precisam fazer login novamente.';
             },
             error: err => {

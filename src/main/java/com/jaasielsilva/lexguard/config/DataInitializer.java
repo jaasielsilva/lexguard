@@ -62,7 +62,7 @@ public class DataInitializer implements ApplicationRunner {
     @Transactional
     public void run(ApplicationArguments args) {
         Empresa empresa = provisionEmpresa();
-        standardRolesProvisioner.ensureForEmpresa(empresa.getId());
+        standardRolesProvisioner.ensureRolesExist(empresa.getId());
         Role superAdminRole = roleRepository
                 .findByNameAndEmpresaId(StandardRoleTemplates.SUPER_ADMIN, empresa.getId())
                 .orElseThrow();

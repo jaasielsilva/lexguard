@@ -1,0 +1,12 @@
+<div class="toast-viewport" aria-live="polite" aria-atomic="true">
+    <div *ngFor="let t of toasts" class="toast toast--{{ t.type }}" role="alert">
+        <i class="bi toast-icon" [ngClass]="icon(t.type)"></i>
+        <div class="toast-body">
+            <strong class="toast-title">{{ t.title }}</strong>
+            <p class="toast-message">{{ t.message }}</p>
+        </div>
+        <button type="button" class="toast-close" (click)="close(t.id)" aria-label="Fechar">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+</div>

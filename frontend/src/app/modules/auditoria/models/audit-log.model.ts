@@ -6,7 +6,11 @@ export type AuditLogAction =
     | 'REQUEST_SUBMITTED' | 'REQUEST_HANDLED'
     | 'REPORT_GENERATED';
 
-export type LegalBasis = 'CONSENTIMENTO' | 'OBRIGACAO_LEGAL' | 'EXECUCAO_CONTRATO' | 'INTERESSE_LEGITIMO' | 'PROTECAO_VIDA' | 'SERVICO_PUBLICO' | 'EXERCICIO_DIREITO';
+export type AuditActionGroup = 'AUTH' | 'TITULAR' | 'CONSENT' | 'DATA' | 'REQUEST' | 'REPORT';
+
+export type LegalBasis =
+    | 'CONSENTIMENTO' | 'OBRIGACAO_LEGAL' | 'EXECUCAO_CONTRATO' | 'INTERESSE_LEGITIMO'
+    | 'PROTECAO_VIDA' | 'SERVICO_PUBLICO' | 'EXERCICIO_DIREITO';
 
 export interface AuditLogResponse {
     id: number;
@@ -17,4 +21,12 @@ export interface AuditLogResponse {
     finalidade: string;
     baseLegal: LegalBasis;
     timestamp: string;
+}
+
+export interface AuditLogSearchPage {
+    items: AuditLogResponse[];
+    totalElements: number;
+    page: number;
+    size: number;
+    hasMore: boolean;
 }

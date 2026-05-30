@@ -11,8 +11,7 @@ import com.jaasielsilva.lexguard.repository.SolicitacaoTitularRepository;
 import com.jaasielsilva.lexguard.repository.TitularRepository;
 import com.jaasielsilva.lexguard.tenant.TenantContext;
 import java.time.Instant;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,12 +51,29 @@ public class SolicitacaoTitularService {
         return mapToResponse(solicitacao);
     }
 
-    public Set<SolicitacaoTitularResponse> listAll() {
+    public List<SolicitacaoTitularResponse> listAll() {
         Long empresaId = TenantContext.getEmpresaId();
-        return solicitacaoRepository.findAll().stream()
-                .filter(s -> s.getEmpresaId().equals(empresaId))
+        if (empresaId == null) {
+            throw new BadRequestException("Empresa não informada");
+        }
+        return solicitacaoRepository.findByEmpresaIdOrderBySolicitadoEmDesc(empresaId)
+                .stream()
                 .map(this::mapToResponse)
-                .collect(Collectors.toSet());
+                .toList();
+    }
+
+    public List<SolicitacaoTitularResponse> listByTitular(Long titularId) {
+        Long empresaId = TenantContext.getEmpresaId();
+        if (empresaId == null) {
+            throw new BadRequestException("Empresa não informada");
+        }
+        titularRepository.findByIdAndEmpresaId(titularId, empresaId)
+                .filter(Titular::isAtivo)
+                .orElseThrow(() -> new ResourceNotFoundException("Titular não encontrado"));
+        return solicitacaoRepository.findByTitularIdAndEmpresaIdOrderBySolicitadoEmDesc(titularId, empresaId)
+                .stream()
+                .map(this::mapToResponse)
+                .toList();
     }
 
     @Transactional
@@ -67,8 +83,9 @@ public class SolicitacaoTitularService {
         SolicitacaoTitular solicitacao = solicitacaoRepository.findById(id)
                 .filter(s -> s.getEmpresaId().equals(empresaId))
                 .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
-        if (solicitacao.getStatus() != RequestStatus.PENDENTE) {
-            throw new BadRequestException("Solicitação já foi atendida");
+        if (solicitacao.getStatus() == RequestStatus.ATENDIDO
+                || solicitacao.getStatus() == RequestStatus.RECUSADO) {
+            throw new BadRequestException("Solicitação já foi concluída");
         }
         solicitacao.setResposta(resposta);
         solicitacao.setAtendidoEm(Instant.now());
@@ -82,10 +99,31 @@ public class SolicitacaoTitularService {
         return mapToResponse(solicitacao);
     }
 
+    @Transactional
+    public SolicitacaoTitularResponse updateStatus(Long id, RequestStatus status, String usuario) {
+        if (status != RequestStatus.EM_PROCESSAMENTO) {
+            throw new BadRequestException("Use este endpoint apenas para EM_PROCESSAMENTO");
+        }
+        Long empresaId = TenantContext.getEmpresaId();
+        SolicitacaoTitular solicitacao = solicitacaoRepository.findById(id)
+                .filter(s -> s.getEmpresaId().equals(empresaId))
+                .orElseThrow(() -> new ResourceNotFoundException("Solicitação não encontrada"));
+        if (solicitacao.getStatus() != RequestStatus.PENDENTE) {
+            throw new BadRequestException("Somente solicitações PENDENTE podem ir para EM_PROCESSAMENTO");
+        }
+        solicitacao.setStatus(RequestStatus.EM_PROCESSAMENTO);
+        solicitacao = solicitacaoRepository.save(solicitacao);
+        auditService.logAction(empresaId, usuario, com.jaasielsilva.lexguard.model.AuditLogAction.REQUEST_HANDLED,
+                "SolicitacaoTitular", "Solicitação em processamento: " + solicitacao.getId(),
+                "Gestão de solicitações", com.jaasielsilva.lexguard.model.LegalBasis.OBRIGACAO_LEGAL);
+        return mapToResponse(solicitacao);
+    }
+
     private SolicitacaoTitularResponse mapToResponse(SolicitacaoTitular solicitacao) {
         return new SolicitacaoTitularResponse(
                 solicitacao.getId(),
                 solicitacao.getTitular().getId(),
+                solicitacao.getTitular().getNome(),
                 solicitacao.getTipo(),
                 solicitacao.getDescricao(),
                 solicitacao.getStatus(),

@@ -1,1 +1,13 @@
-// shared module styles in styles.scss
+.cell-desc {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.table-footer {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #f1f5f9;
+}

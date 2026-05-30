@@ -57,7 +57,7 @@ export class DashboardComponent implements OnInit {
             {
                 label: 'Dados Sensíveis',
                 value: m.totalDadosSensiveis,
-                icon: 'bi-database-lock-fill',
+                icon: 'bi-shield-lock-fill',
                 color: 'red',
                 description: 'Registros classificados como sensíveis',
             },

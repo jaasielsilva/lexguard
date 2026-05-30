@@ -4,6 +4,7 @@ import com.jaasielsilva.lexguard.model.Permission;
 import com.jaasielsilva.lexguard.model.Role;
 import com.jaasielsilva.lexguard.repository.RoleRepository;
 import com.jaasielsilva.lexguard.security.StandardRoleTemplates;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,31 +24,46 @@ public class StandardRolesProvisioner {
         this.roleRepository = roleRepository;
     }
 
+    /**
+     * Garante que os perfis padrao existam. Nao sobrescreve permissoes ja gravadas
+     * (exceto SUPER_ADMIN, que sempre recebe todas as permissoes).
+     */
     @Transactional
-    public void ensureForEmpresa(Long empresaId) {
+    public void ensureRolesExist(Long empresaId) {
         for (Map.Entry<String, Set<Permission>> entry : StandardRoleTemplates.all().entrySet()) {
-            syncRole(empresaId, entry.getKey(), entry.getValue());
+            ensureRoleExists(empresaId, entry.getKey(), entry.getValue());
         }
     }
 
-    private void syncRole(Long empresaId, String name, Set<Permission> expected) {
+    private void ensureRoleExists(Long empresaId, String name, Set<Permission> defaultPermissions) {
         roleRepository.findByNameAndEmpresaId(name, empresaId)
                 .ifPresentOrElse(
-                        existing -> {
-                            if (!existing.getPermissions().containsAll(expected)
-                                    || !expected.containsAll(existing.getPermissions())) {
-                                existing.setPermissions(new HashSet<>(expected));
-                                roleRepository.save(existing);
-                                log.info("Perfil '{}' sincronizado (empresaId={})", name, empresaId);
-                            }
-                        },
+                        existing -> syncSuperAdminOnly(existing),
                         () -> {
                             Role role = new Role();
                             role.setEmpresaId(empresaId);
                             role.setName(name);
-                            role.setPermissions(new HashSet<>(expected));
+                            role.setPermissions(new HashSet<>(defaultPermissions));
                             roleRepository.save(role);
                             log.info("Perfil '{}' criado (empresaId={})", name, empresaId);
                         });
+    }
+
+    private void syncSuperAdminOnly(Role existing) {
+        if (!StandardRoleTemplates.SUPER_ADMIN.equals(existing.getName())) {
+            return;
+        }
+        Set<Permission> all = EnumSet.allOf(Permission.class);
+        if (!existing.getPermissions().containsAll(all)) {
+            replacePermissions(existing, all);
+            roleRepository.save(existing);
+            log.info("Perfil SUPER_ADMIN sincronizado com todas as permissoes (empresaId={})",
+                    existing.getEmpresaId());
+        }
+    }
+
+    private static void replacePermissions(Role role, Set<Permission> permissions) {
+        role.getPermissions().clear();
+        role.getPermissions().addAll(permissions);
     }
 }
