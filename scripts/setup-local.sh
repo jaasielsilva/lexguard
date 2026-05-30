@@ -22,10 +22,16 @@ if [[ -f "$LOCAL_FILE" ]]; then
 fi
 
 # ── JWT secret ────────────────────────────────────────────────────────────────
+JWT_SECRET=""
 if command -v openssl &>/dev/null; then
-  JWT_SECRET="$(openssl rand -base64 64 | tr -d '\n')"
-else
+  JWT_SECRET="$(openssl rand -base64 64 2>/dev/null | tr -d '\n')"
+fi
+if [[ -z "$JWT_SECRET" ]]; then
   JWT_SECRET="$(head -c 64 /dev/urandom | base64 | tr -d '\n')"
+fi
+if [[ ${#JWT_SECRET} -lt 32 ]]; then
+  echo "Erro: não foi possível gerar uma chave JWT válida."
+  exit 1
 fi
 echo "✓ Chave JWT gerada automaticamente"
 
