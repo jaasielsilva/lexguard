@@ -1,0 +1,53 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dados Pessoais</h1>
+            <p class="page-subtitle">Campos de dados vinculados aos titulares</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <label class="select-label">Titular</label>
+        <select [(ngModel)]="titularId" (ngModelChange)="load()">
+            <option *ngFor="let t of titulares" [ngValue]="t.id">{{ t.nome }}</option>
+        </select>
+        <span class="count">{{ dados.length }} registro(s)</span>
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+    </div>
+
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="dados.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>Campo</th>
+                    <th>Classificação</th>
+                    <th>Base legal</th>
+                    <th>Risco</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let d of dados">
+                    <td><strong>{{ d.nomeCampo }}</strong></td>
+                    <td>{{ d.classificacao }}</td>
+                    <td>{{ d.baseLegal }}</td>
+                    <td>{{ d.risco }}</td>
+                    <td>{{ d.ativo ? 'Ativo' : 'Inativo' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-database-lock"></i>
+                <p>Nenhum dado pessoal encontrado para este titular.</p>
+            </div>
+        </ng-template>
+    </div>
+</div>

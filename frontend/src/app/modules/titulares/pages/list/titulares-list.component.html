@@ -1,0 +1,93 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Titulares</h1>
+            <p class="page-subtitle">Gestão de titulares de dados pessoais</p>
+        </div>
+        <a routerLink="novo" class="btn-primary">
+            <i class="bi bi-plus-lg"></i> Novo Titular
+        </a>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
+                placeholder="Buscar por nome, CPF ou e-mail..." />
+        </div>
+        <span class="count">{{ filtered.length }} registro(s)</span>
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <!-- Skeleton -->
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="filtered.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>CPF</th>
+                    <th>E-mail</th>
+                    <th>Classificação</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let t of filtered">
+                    <td><strong>{{ t.nome }}</strong></td>
+                    <td class="mono">{{ t.cpf }}</td>
+                    <td>{{ t.email }}</td>
+                    <td>
+                        <span class="badge" [class.badge-red]="t.classificacao === 'SENSIVEL'"
+                            [class.badge-blue]="t.classificacao === 'PESSOAL'">
+                            {{ t.classificacao }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge" [class.badge-green]="t.ativo" [class.badge-gray]="!t.ativo">
+                            {{ t.ativo ? 'Ativo' : 'Inativo' }}
+                        </span>
+                    </td>
+                    <td class="actions">
+                        <a [routerLink]="['editar', t.id]" class="btn-icon" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button class="btn-icon btn-icon-red" (click)="confirmDelete(t.id)" title="Excluir">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-people"></i>
+                <p>Nenhum titular encontrado.</p>
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- Confirm delete modal -->
+    <div class="modal-overlay" *ngIf="deleteId">
+        <div class="modal-box">
+            <i class="bi bi-exclamation-triangle-fill modal-icon"></i>
+            <h3>Confirmar exclusão</h3>
+            <p>O titular será desativado. Esta ação pode ser revertida pelo administrador.</p>
+            <div class="modal-actions">
+                <button class="btn-secondary" (click)="cancelDelete()">Cancelar</button>
+                <button class="btn-danger" (click)="doDelete()" [disabled]="deleting">
+                    <span *ngIf="!deleting">Excluir</span>
+                    <span *ngIf="deleting"><span class="spinner-sm"></span> Excluindo...</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

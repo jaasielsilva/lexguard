@@ -1,0 +1,54 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Auditoria</h1>
+            <p class="page-subtitle">Trilha de auditoria do sistema</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
+                placeholder="Buscar por ação, usuário ou descrição..." />
+        </div>
+        <span class="count">{{ filtered.length }} registro(s)</span>
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="filtered.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Ação</th>
+                    <th>Usuário</th>
+                    <th>Recurso</th>
+                    <th>Descrição</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let l of filtered">
+                    <td>{{ l.timestamp | date:'short' }}</td>
+                    <td><strong>{{ l.action }}</strong></td>
+                    <td>{{ l.usuario }}</td>
+                    <td>{{ l.resource }}</td>
+                    <td>{{ l.descricao }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-shield-check"></i>
+                <p>Nenhum registro de auditoria encontrado.</p>
+            </div>
+        </ng-template>
+    </div>
+</div>

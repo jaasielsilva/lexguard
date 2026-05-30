@@ -1,0 +1,56 @@
+<div class="dashboard">
+
+    <!-- Page title -->
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Visão geral de compliance e proteção de dados</p>
+        </div>
+        <button class="btn-refresh" (click)="loadMetrics()" [disabled]="loading" title="Atualizar">
+            <i class="bi bi-arrow-clockwise" [class.spinning]="loading"></i>
+            Atualizar
+        </button>
+    </div>
+
+    <!-- Loading skeleton -->
+    <div class="cards-grid" *ngIf="loading">
+        <div class="card skeleton" *ngFor="let i of [1,2,3,4,5,6]">
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-lines">
+                <div class="skeleton-line short"></div>
+                <div class="skeleton-line long"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error state -->
+    <div class="error-state" *ngIf="error && !loading">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <p>{{ error }}</p>
+        <button class="btn-refresh" (click)="loadMetrics()">Tentar novamente</button>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="cards-grid" *ngIf="!loading && !error">
+        <div class="card metric-card" *ngFor="let card of cards" [class]="'card--' + card.color">
+            <div class="card-icon">
+                <i [class]="'bi ' + card.icon"></i>
+            </div>
+            <div class="card-body">
+                <span class="card-value">{{ card.value }}</span>
+                <span class="card-label">{{ card.label }}</span>
+                <span class="card-desc">{{ card.description }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info banner -->
+    <div class="info-banner" *ngIf="!loading && metrics">
+        <i class="bi bi-info-circle-fill"></i>
+        <span>
+            Sistema operando em conformidade com a
+            <strong>Lei Geral de Proteção de Dados (LGPD)</strong> — Lei nº 13.709/2018.
+        </span>
+    </div>
+
+</div>

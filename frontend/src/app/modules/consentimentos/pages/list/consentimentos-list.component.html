@@ -1,0 +1,53 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Consentimentos</h1>
+            <p class="page-subtitle">Registros de consentimento por titular</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <label class="select-label">Titular</label>
+        <select [(ngModel)]="titularId" (ngModelChange)="load()">
+            <option *ngFor="let t of titulares" [ngValue]="t.id">{{ t.nome }}</option>
+        </select>
+        <span class="count">{{ consentimentos.length }} registro(s)</span>
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+    </div>
+
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="consentimentos.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>Finalidade</th>
+                    <th>Base legal</th>
+                    <th>Versão do termo</th>
+                    <th>Aceite em</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let c of consentimentos">
+                    <td><strong>{{ c.finalidade }}</strong></td>
+                    <td>{{ c.baseLegal }}</td>
+                    <td>{{ c.versaoTermo }}</td>
+                    <td>{{ c.aceiteEm | date:'short' }}</td>
+                    <td>{{ c.ativo ? 'Ativo' : 'Revogado' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-file-earmark-check"></i>
+                <p>Nenhum consentimento encontrado para este titular.</p>
+            </div>
+        </ng-template>
+    </div>
+</div>

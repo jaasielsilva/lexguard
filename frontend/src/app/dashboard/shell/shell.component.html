@@ -1,0 +1,60 @@
+<div class="shell" [class.sidebar-collapsed]="!sidebarOpen">
+
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <i class="bi bi-shield-lock-fill brand-icon"></i>
+                <span class="brand-name">LexGuard</span>
+            </div>
+            <button class="toggle-btn" (click)="toggleSidebar()" aria-label="Recolher menu">
+                <i class="bi bi-layout-sidebar-reverse"></i>
+            </button>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li *ngFor="let item of navItems">
+                    <a [routerLink]="item.route" routerLinkActive="active"
+                        [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }" class="nav-link">
+                        <i [class]="'bi ' + item.icon"></i>
+                        <span class="nav-label">{{ item.label }}</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="logout-btn" (click)="logout()">
+                <i class="bi bi-box-arrow-left"></i>
+                <span class="nav-label">Sair</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- ── Main area ── -->
+    <div class="main-area">
+
+        <!-- Header -->
+        <header class="topbar">
+            <button class="mobile-toggle" (click)="toggleSidebar()" aria-label="Abrir menu">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <div class="topbar-right">
+                <div class="user-info">
+                    <div class="avatar">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <span class="user-name">Super Admin</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="page-content">
+            <router-outlet></router-outlet>
+        </main>
+
+    </div>
+</div>

@@ -1,0 +1,52 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Relatórios</h1>
+            <p class="page-subtitle">Relatórios gerados pelo sistema</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
+                placeholder="Buscar por título ou tipo..." />
+        </div>
+        <span class="count">{{ filtered.length }} registro(s)</span>
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="filtered.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>Título</th>
+                    <th>Tipo</th>
+                    <th>Gerado por</th>
+                    <th>Gerado em</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let r of filtered">
+                    <td><strong>{{ r.titulo }}</strong></td>
+                    <td>{{ r.tipo }}</td>
+                    <td>{{ r.geradoPor }}</td>
+                    <td>{{ r.geradoEm | date:'short' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-bar-chart-line"></i>
+                <p>Nenhum relatório encontrado.</p>
+            </div>
+        </ng-template>
+    </div>
+</div>

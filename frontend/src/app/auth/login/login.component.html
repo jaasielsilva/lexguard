@@ -1,0 +1,130 @@
+<div class="login-page">
+
+    <!-- Left panel: branding -->
+    <aside class="login-brand">
+        <div class="brand-content">
+            <div class="brand-logo">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            <h1 class="brand-name">LexGuard</h1>
+            <p class="brand-tagline">Plataforma de Compliance e Proteção de Dados</p>
+
+            <ul class="brand-features">
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Gestão de consentimentos LGPD</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Controle de dados pessoais</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Relatórios e auditoria completos</span>
+                </li>
+                <li>
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Multi-tenant seguro por empresa</span>
+                </li>
+            </ul>
+
+            <div class="brand-badge">
+                <i class="bi bi-patch-check-fill"></i>
+                <span>Certificado em conformidade com a LGPD</span>
+            </div>
+        </div>
+
+        <div class="brand-footer">
+            <span>© 2025 LexGuard. Todos os direitos reservados.</span>
+        </div>
+    </aside>
+
+    <!-- Right panel: form -->
+    <main class="login-form-panel">
+        <div class="login-form-wrapper">
+
+            <div class="form-header">
+                <div class="form-logo d-md-none">
+                    <i class="bi bi-shield-lock-fill"></i>
+                    <span>LexGuard</span>
+                </div>
+                <h2>Bem-vindo de volta</h2>
+                <p>Acesse sua conta para continuar</p>
+            </div>
+
+            <!-- Error alert -->
+            <div class="alert-error" *ngIf="errorMessage" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+                <span>{{ errorMessage }}</span>
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate autocomplete="on">
+
+                <!-- Username -->
+                <div class="field-group" [class.field-error]="username.invalid && username.touched">
+                    <label for="username">Usuário</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-person input-icon"></i>
+                        <input id="username" type="text" formControlName="username" placeholder="Digite seu usuário"
+                            autocomplete="username"
+                            [attr.aria-describedby]="username.invalid && username.touched ? 'username-error' : null" />
+                    </div>
+                    <span class="field-hint" id="username-error" *ngIf="username.invalid && username.touched">
+                        <ng-container *ngIf="username.errors?.['required']">Usuário é obrigatório.</ng-container>
+                        <ng-container *ngIf="username.errors?.['minlength']">Mínimo de 3 caracteres.</ng-container>
+                    </span>
+                </div>
+
+                <!-- Password -->
+                <div class="field-group" [class.field-error]="password.invalid && password.touched">
+                    <label for="password">Senha</label>
+                    <div class="input-wrapper">
+                        <i class="bi bi-lock input-icon"></i>
+                        <input id="password" [type]="showPassword ? 'text' : 'password'" formControlName="password"
+                            placeholder="Digite sua senha" autocomplete="current-password"
+                            [attr.aria-describedby]="password.invalid && password.touched ? 'password-error' : null" />
+                        <button type="button" class="toggle-password" (click)="togglePassword()"
+                            [attr.aria-label]="showPassword ? 'Ocultar senha' : 'Mostrar senha'">
+                            <i [class]="showPassword ? 'bi bi-eye-slash' : 'bi bi-eye'"></i>
+                        </button>
+                    </div>
+                    <span class="field-hint" id="password-error" *ngIf="password.invalid && password.touched">
+                        <ng-container *ngIf="password.errors?.['required']">Senha é obrigatória.</ng-container>
+                        <ng-container *ngIf="password.errors?.['minlength']">Mínimo de 6 caracteres.</ng-container>
+                    </span>
+                </div>
+
+                <!-- Remember me + forgot -->
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" formControlName="rememberMe" />
+                        Lembrar-me
+                    </label>
+                    <a href="#" class="forgot-link" (click)="$event.preventDefault()">Esqueci minha senha</a>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="btn-login" [disabled]="loading">
+                    <span *ngIf="!loading">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Entrar
+                    </span>
+                    <span *ngIf="loading" class="loading-state">
+                        <span class="spinner"></span>
+                        Autenticando...
+                    </span>
+                </button>
+
+            </form>
+
+            <div class="form-footer">
+                <div class="security-note">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Conexão segura com criptografia TLS</span>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</div>

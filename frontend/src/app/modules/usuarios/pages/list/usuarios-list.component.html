@@ -1,0 +1,121 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Usuários</h1>
+            <p class="page-subtitle">Gestão de usuários do sistema</p>
+        </div>
+        <button class="btn-primary" (click)="abrirFormulario()">
+            <i class="bi bi-plus-lg"></i> Novo Usuário
+        </button>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
+                placeholder="Buscar por nome, login ou e-mail..." />
+        </div>
+        <span class="count">{{ filtered.length }} registro(s)</span>
+    </div>
+
+    <div class="alert-success" *ngIf="success">
+        <i class="bi bi-check-circle-fill"></i> {{ success }}
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="filtered.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Login</th>
+                    <th>E-mail</th>
+                    <th>Perfis</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let u of filtered">
+                    <td><strong>{{ u.nome }}</strong></td>
+                    <td class="mono">{{ u.username }}</td>
+                    <td>{{ u.email }}</td>
+                    <td>{{ u.roles.join(', ') }}</td>
+                    <td>{{ u.ativo ? 'Ativo' : 'Inativo' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-person-gear"></i>
+                <p>Nenhum usuário encontrado.</p>
+            </div>
+        </ng-template>
+    </div>
+
+    <!-- Modal: novo usuário -->
+    <div class="modal-overlay" *ngIf="formVisivel" (click)="cancelarFormulario()">
+        <div class="modal-box modal-box--form" (click)="$event.stopPropagation()">
+            <h3>Novo Usuário</h3>
+            <p class="modal-subtitle">Cadastre um novo usuário do sistema</p>
+
+            <div class="alert-error" *ngIf="formError">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ formError }}
+            </div>
+
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+                <div class="form-grid">
+                    <div class="field-group field-group--full"
+                        [class.field-error]="f['nome'].invalid && f['nome'].touched">
+                        <label>Nome completo *</label>
+                        <input type="text" formControlName="nome" placeholder="Nome do usuário" />
+                        <span class="field-hint" *ngIf="f['nome'].invalid && f['nome'].touched">
+                            Nome é obrigatório (mín. 3 caracteres).
+                        </span>
+                    </div>
+
+                    <div class="field-group" [class.field-error]="f['username'].invalid && f['username'].touched">
+                        <label>Login *</label>
+                        <input type="text" formControlName="username" placeholder="usuario.login" />
+                        <span class="field-hint" *ngIf="f['username'].invalid && f['username'].touched">
+                            Login é obrigatório.
+                        </span>
+                    </div>
+
+                    <div class="field-group" [class.field-error]="f['email'].invalid && f['email'].touched">
+                        <label>E-mail *</label>
+                        <input type="email" formControlName="email" placeholder="email@exemplo.com" />
+                        <span class="field-hint" *ngIf="f['email'].invalid && f['email'].touched">
+                            E-mail válido é obrigatório.
+                        </span>
+                    </div>
+
+                    <div class="field-group field-group--full"
+                        [class.field-error]="f['password'].invalid && f['password'].touched">
+                        <label>Senha *</label>
+                        <input type="password" formControlName="password" placeholder="Mínimo 6 caracteres" />
+                        <span class="field-hint" *ngIf="f['password'].invalid && f['password'].touched">
+                            Senha é obrigatória (mín. 6 caracteres).
+                        </span>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" (click)="cancelarFormulario()" [disabled]="saving">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-primary" [disabled]="saving">
+                        <span *ngIf="!saving"><i class="bi bi-check-lg"></i> Cadastrar</span>
+                        <span *ngIf="saving"><span class="spinner-sm"></span> Salvando...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

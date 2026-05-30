@@ -1,0 +1,54 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Solicitações</h1>
+            <p class="page-subtitle">Pedidos de direitos dos titulares (LGPD)</p>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <div class="search-box">
+            <i class="bi bi-search"></i>
+            <input type="text" [(ngModel)]="search" (ngModelChange)="applyFilter()"
+                placeholder="Buscar por tipo, status ou descrição..." />
+        </div>
+        <span class="count">{{ filtered.length }} registro(s)</span>
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+    </div>
+
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table" *ngIf="filtered.length > 0; else empty">
+            <thead>
+                <tr>
+                    <th>Titular ID</th>
+                    <th>Tipo</th>
+                    <th>Status</th>
+                    <th>Descrição</th>
+                    <th>Solicitado em</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let s of filtered">
+                    <td>{{ s.titularId }}</td>
+                    <td><strong>{{ s.tipo }}</strong></td>
+                    <td>{{ s.status }}</td>
+                    <td>{{ s.descricao }}</td>
+                    <td>{{ s.solicitadoEm | date:'short' }}</td>
+                </tr>
+            </tbody>
+        </table>
+        <ng-template #empty>
+            <div class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>Nenhuma solicitação encontrada.</p>
+            </div>
+        </ng-template>
+    </div>
+</div>

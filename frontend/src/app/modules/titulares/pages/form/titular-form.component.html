@@ -1,0 +1,71 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">{{ isEdit ? 'Editar Titular' : 'Novo Titular' }}</h1>
+            <p class="page-subtitle">{{ isEdit ? 'Atualize os dados do titular' : 'Cadastre um novo titular de dados' }}
+            </p>
+        </div>
+        <a routerLink="/dashboard/titulares" class="btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </a>
+    </div>
+
+    <div class="form-card">
+        <div class="alert-error" *ngIf="error">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+        </div>
+
+        <div class="loading-block" *ngIf="loading">
+            <span class="spinner"></span> Carregando...
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" *ngIf="!loading" novalidate>
+            <div class="form-grid">
+
+                <div class="field-group" [class.field-error]="f['nome'].invalid && f['nome'].touched">
+                    <label>Nome completo *</label>
+                    <input type="text" formControlName="nome" placeholder="Nome do titular" />
+                    <span class="field-hint" *ngIf="f['nome'].invalid && f['nome'].touched">Nome é obrigatório (mín. 3
+                        caracteres).</span>
+                </div>
+
+                <div class="field-group" [class.field-error]="f['cpf'].invalid && f['cpf'].touched">
+                    <label>CPF *</label>
+                    <input type="text" formControlName="cpf" placeholder="000.000.000-00" mask="000.000.000-00"
+                        [attr.disabled]="isEdit ? '' : null" />
+                    <span class="field-hint" *ngIf="f['cpf'].invalid && f['cpf'].touched">CPF é obrigatório.</span>
+                </div>
+
+                <div class="field-group" [class.field-error]="f['email'].invalid && f['email'].touched">
+                    <label>E-mail *</label>
+                    <input type="email" formControlName="email" placeholder="email@exemplo.com" />
+                    <span class="field-hint" *ngIf="f['email'].invalid && f['email'].touched">E-mail válido é
+                        obrigatório.</span>
+                </div>
+
+                <div class="field-group">
+                    <label>Telefone</label>
+                    <input type="text" formControlName="telefone" placeholder="(00) 00000-0000" />
+                </div>
+
+                <div class="field-group">
+                    <label>Classificação *</label>
+                    <select formControlName="classificacao">
+                        <option value="PESSOAL">Pessoal</option>
+                        <option value="SENSIVEL">Sensível</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="form-footer">
+                <a routerLink="/dashboard/titulares" class="btn-secondary">Cancelar</a>
+                <button type="submit" class="btn-primary" [disabled]="saving">
+                    <span *ngIf="!saving"><i class="bi bi-check-lg"></i> {{ isEdit ? 'Salvar alterações' : 'Cadastrar'
+                        }}</span>
+                    <span *ngIf="saving"><span class="spinner-sm"></span> Salvando...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
