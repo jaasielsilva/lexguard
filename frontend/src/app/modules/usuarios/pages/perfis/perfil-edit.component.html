@@ -1,0 +1,40 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Editar perfil</h1>
+            <p class="page-subtitle" *ngIf="role">{{ label(role.name) }} ({{ role.name }})</p>
+        </div>
+        <button type="button" class="btn-secondary" (click)="voltar()">
+            <i class="bi bi-arrow-left"></i> Voltar
+        </button>
+    </div>
+
+    <div class="alert-success" *ngIf="success">
+        <i class="bi bi-check-circle-fill"></i> {{ success }}
+    </div>
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">Carregando...</div>
+
+    <div class="table-card form-card" *ngIf="!loading && role">
+        <p class="hint">Alteracoes afetam todos os usuarios com este perfil. Faca login de novo para ver menus atualizados.</p>
+
+        <div class="perm-grid">
+            <label class="perm-item" *ngFor="let code of allPermissions">
+                <input type="checkbox" [checked]="isChecked(code)"
+                    (change)="toggle(code, $any($event.target).checked)" />
+                <span>{{ permissionLabels[code] }}</span>
+                <span class="mono">{{ code }}</span>
+            </label>
+        </div>
+
+        <div class="modal-actions">
+            <button type="button" class="btn-primary" (click)="salvar()" [disabled]="saving">
+                <span *ngIf="!saving">Salvar permissoes</span>
+                <span *ngIf="saving">Salvando...</span>
+            </button>
+        </div>
+    </div>
+</div>

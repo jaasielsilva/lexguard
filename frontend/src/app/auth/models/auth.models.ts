@@ -8,4 +8,6 @@ export interface AuthResponse {
     refreshToken: string;
     empresaId: number;
     message: string;
+    roles?: string[];
+    permissions?: string[];
 }

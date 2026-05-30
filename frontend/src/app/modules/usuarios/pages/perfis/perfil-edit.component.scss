@@ -1,0 +1,30 @@
+@import '../list/usuarios-list.component.scss';
+
+.form-card {
+    padding: 1.5rem;
+}
+
+.hint {
+    margin-bottom: 1rem;
+    color: var(--text-muted, #6c757d);
+    font-size: 0.9rem;
+}
+
+.perm-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.perm-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    cursor: pointer;
+}
+
+.mono {
+    font-size: 0.75rem;
+    color: var(--text-muted, #6c757d);
+}

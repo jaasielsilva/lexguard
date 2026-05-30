@@ -6,9 +6,9 @@ import com.jaasielsilva.lexguard.exception.BadRequestException;
 import com.jaasielsilva.lexguard.exception.ResourceNotFoundException;
 import com.jaasielsilva.lexguard.model.Role;
 import com.jaasielsilva.lexguard.model.Usuario;
-import com.jaasielsilva.lexguard.repository.RoleRepository;
 import com.jaasielsilva.lexguard.repository.UsuarioRepository;
 import com.jaasielsilva.lexguard.tenant.TenantContext;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,13 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final RoleRepository roleRepository;
+    private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
-    public UsuarioService(UsuarioRepository usuarioRepository, RoleRepository roleRepository,
+    public UsuarioService(UsuarioRepository usuarioRepository, RoleService roleService,
             PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
-        this.roleRepository = roleRepository;
+        this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -40,6 +40,11 @@ public class UsuarioService {
                     throw new BadRequestException("Usuário já existe");
                 });
 
+        Set<String> roleNames = request.getRoles();
+        if (roleNames == null || roleNames.isEmpty()) {
+            throw new BadRequestException("Informe ao menos um perfil (role)");
+        }
+
         Usuario usuario = new Usuario();
         usuario.setEmpresaId(empresaId);
         usuario.setUsername(request.getUsername());
@@ -48,16 +53,10 @@ public class UsuarioService {
         usuario.setEmail(request.getEmail());
         usuario.setAtivo(true);
 
-        Set<Role> roles = request.getRoles() == null ? Set.of()
-                : request.getRoles().stream()
-                        .map(roleName -> roleRepository.findByNameAndEmpresaId(roleName, empresaId)
-                                .orElseGet(() -> {
-                                    Role role = new Role();
-                                    role.setEmpresaId(empresaId);
-                                    role.setName(roleName);
-                                    return roleRepository.save(role);
-                                }))
-                        .collect(Collectors.toSet());
+        Set<Role> roles = new HashSet<>();
+        for (String roleName : roleNames) {
+            roles.add(roleService.requireAssignableRole(roleName, empresaId));
+        }
         usuario.setRoles(roles);
         usuario = usuarioRepository.save(usuario);
         return mapToResponse(usuario);

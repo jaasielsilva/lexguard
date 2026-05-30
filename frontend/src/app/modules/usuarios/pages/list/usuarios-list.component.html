@@ -4,9 +4,14 @@
             <h1 class="page-title">Usuários</h1>
             <p class="page-subtitle">Gestão de usuários do sistema</p>
         </div>
-        <button class="btn-primary" (click)="abrirFormulario()">
-            <i class="bi bi-plus-lg"></i> Novo Usuário
-        </button>
+        <div class="header-actions">
+            <a routerLink="perfis" class="btn-secondary">
+                <i class="bi bi-key"></i> Perfis
+            </a>
+            <button class="btn-primary" (click)="abrirFormulario()">
+                <i class="bi bi-plus-lg"></i> Novo Usuário
+            </button>
+        </div>
     </div>
 
     <div class="toolbar">
@@ -103,6 +108,17 @@
                         <span class="field-hint" *ngIf="f['password'].invalid && f['password'].touched">
                             Senha é obrigatória (mín. 6 caracteres).
                         </span>
+                    </div>
+
+                    <div class="field-group field-group--full"
+                        [class.field-error]="f['roleName'].invalid && f['roleName'].touched">
+                        <label>Perfil de acesso *</label>
+                        <select formControlName="roleName">
+                            <option *ngFor="let r of assignableRoles" [value]="r.name">
+                                {{ roleLabel(r.name) }}
+                            </option>
+                        </select>
+                        <span class="field-hint">Define o que o usuario pode ver e fazer no sistema.</span>
                     </div>
                 </div>
 

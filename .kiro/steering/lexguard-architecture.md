@@ -17,12 +17,18 @@ Plataforma SaaS multi-tenant de Compliance e Proteção de Dados (LGPD).
 5. `@PreAuthorize` verifica a role/permissão no método
 
 ### Roles e Permissões
-| Role | Permissões |
-|------|-----------|
-| SUPER_ADMIN | Todas (DATA_READ, DATA_WRITE, CONSENT_MANAGE, AUDIT_READ, REQUEST_MANAGE, REPORT_READ, USER_MANAGE, TENANT_ADMIN) |
-| ADMIN | DATA_READ, DATA_WRITE, CONSENT_MANAGE, REQUEST_MANAGE, REPORT_READ, USER_MANAGE |
-| ANALYST | DATA_READ, CONSENT_MANAGE, REQUEST_MANAGE, REPORT_READ |
-| VIEWER | DATA_READ, REPORT_READ |
+Perfis são por empresa (tenant). Permissões ficam no **Role**, nunca direto no usuário.
+
+| Role | Permissões | Atribuível na UI |
+|------|-----------|------------------|
+| SUPER_ADMIN | Todas | Não (seed / plataforma) |
+| ADMIN | DATA_READ, DATA_WRITE, CONSENT_MANAGE, REQUEST_MANAGE, REPORT_READ, USER_MANAGE | Sim |
+| ANALYST | DATA_READ, CONSENT_MANAGE, REQUEST_MANAGE, REPORT_READ | Sim |
+| VIEWER | DATA_READ, REPORT_READ | Sim |
+| DPO | DATA_READ, CONSENT_MANAGE, REQUEST_MANAGE, REPORT_READ, AUDIT_READ | Sim |
+| USER | Igual VIEWER (legado) | Não (use VIEWER) |
+
+API: `GET/PUT /api/roles` — login retorna `roles` e `permissions` para o menu Angular.
 
 ### Mapeamento @PreAuthorize por Endpoint
 | Controller | Método | Permissão |

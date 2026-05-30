@@ -6,6 +6,7 @@ import com.jaasielsilva.lexguard.model.TokenBlacklist;
 import com.jaasielsilva.lexguard.model.Usuario;
 import com.jaasielsilva.lexguard.repository.TokenBlacklistRepository;
 import com.jaasielsilva.lexguard.repository.UsuarioRepository;
+import com.jaasielsilva.lexguard.security.AuthorityUtils;
 import com.jaasielsilva.lexguard.security.JwtTokenProvider;
 import com.jaasielsilva.lexguard.security.UserAuthorityBuilder;
 import com.jaasielsilva.lexguard.tenant.TenantContext;
@@ -55,7 +56,14 @@ public class AuthService {
                     UserAuthorityBuilder.fromRoles(usuario.getRoles()));
             String accessToken = tokenProvider.generateAccessToken(principal, empresaId);
             String refreshToken = tokenProvider.generateRefreshToken(principal, empresaId);
-            return new AuthResponse(accessToken, refreshToken, empresaId, "Autenticado com sucesso");
+            var authorities = UserAuthorityBuilder.fromRoles(usuario.getRoles());
+            return AuthResponse.success(
+                    accessToken,
+                    refreshToken,
+                    empresaId,
+                    "Autenticado com sucesso",
+                    AuthorityUtils.extractRoleNames(authorities),
+                    AuthorityUtils.extractPermissions(authorities));
         } catch (BadCredentialsException ex) {
             throw new BadCredentialsException("Credenciais inválidas");
         } finally {
@@ -88,6 +96,13 @@ public class AuthService {
         blacklist.setToken(refreshToken);
         blacklist.setRevokedAt(Instant.now());
         tokenBlacklistRepository.save(blacklist);
-        return new AuthResponse(accessToken, refreshToken, empresaId, "Refresh token validado com sucesso");
+        var authorities = UserAuthorityBuilder.fromRoles(usuario.getRoles());
+        return AuthResponse.success(
+                accessToken,
+                refreshToken,
+                empresaId,
+                "Refresh token validado com sucesso",
+                AuthorityUtils.extractRoleNames(authorities),
+                AuthorityUtils.extractPermissions(authorities));
     }
 }

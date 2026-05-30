@@ -1,0 +1,49 @@
+<div class="module-page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Perfis de acesso</h1>
+            <p class="page-subtitle">Perfis padrao da empresa e permissoes de cada um</p>
+        </div>
+        <a routerLink="/dashboard/usuarios" class="btn-secondary">
+            <i class="bi bi-arrow-left"></i> Voltar aos usuarios
+        </a>
+    </div>
+
+    <div class="alert-error" *ngIf="error">
+        <i class="bi bi-exclamation-triangle-fill"></i> {{ error }}
+    </div>
+
+    <div class="table-card" *ngIf="loading">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+    </div>
+
+    <div class="table-card" *ngIf="!loading && !error">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Perfil</th>
+                    <th>Permissoes</th>
+                    <th>Tipo</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let r of roles">
+                    <td><strong>{{ label(r.name) }}</strong><br /><span class="mono">{{ r.name }}</span></td>
+                    <td>{{ r.permissions.length }} permissao(oes)</td>
+                    <td>
+                        <span *ngIf="r.name === 'SUPER_ADMIN'">Plataforma</span>
+                        <span *ngIf="r.name !== 'SUPER_ADMIN' && r.assignable">Atribuivel</span>
+                        <span *ngIf="!r.assignable && r.name !== 'SUPER_ADMIN'">Sistema</span>
+                    </td>
+                    <td>
+                        <button type="button" class="btn-secondary btn-sm" (click)="editar(r)"
+                            [disabled]="r.name === 'SUPER_ADMIN'">
+                            Editar permissoes
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

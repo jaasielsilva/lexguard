@@ -1,13 +1,13 @@
 package com.jaasielsilva.lexguard.config;
 
 import com.jaasielsilva.lexguard.model.Empresa;
-import com.jaasielsilva.lexguard.model.Permission;
 import com.jaasielsilva.lexguard.model.Role;
 import com.jaasielsilva.lexguard.model.Usuario;
 import com.jaasielsilva.lexguard.repository.EmpresaRepository;
 import com.jaasielsilva.lexguard.repository.RoleRepository;
 import com.jaasielsilva.lexguard.repository.UsuarioRepository;
-import java.util.EnumSet;
+import com.jaasielsilva.lexguard.security.StandardRoleTemplates;
+import com.jaasielsilva.lexguard.service.StandardRolesProvisioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,18 +18,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Executa uma única vez na inicialização da aplicação.
- * Cria a empresa raiz "LexGuard" e o usuário super admin caso ainda não
- * existam.
+ * Executa na inicializacao: empresa raiz, perfis padrao e super admin.
  */
 @Component
 public class DataInitializer implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
-    // CNPJ fictício reservado para a empresa raiz da plataforma
     private static final String LEXGUARD_CNPJ = "00.000.000/0001-00";
-    private static final String SUPER_ADMIN_ROLE = "SUPER_ADMIN";
 
     @Value("${app.superadmin.username}")
     private String superAdminUsername;
@@ -47,27 +43,31 @@ public class DataInitializer implements ApplicationRunner {
     private final RoleRepository roleRepository;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final StandardRolesProvisioner standardRolesProvisioner;
 
     public DataInitializer(
             EmpresaRepository empresaRepository,
             RoleRepository roleRepository,
             UsuarioRepository usuarioRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            StandardRolesProvisioner standardRolesProvisioner) {
         this.empresaRepository = empresaRepository;
         this.roleRepository = roleRepository;
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
+        this.standardRolesProvisioner = standardRolesProvisioner;
     }
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
         Empresa empresa = provisionEmpresa();
-        Role role = provisionRole(empresa.getId());
-        provisionSuperAdmin(empresa.getId(), role);
+        standardRolesProvisioner.ensureForEmpresa(empresa.getId());
+        Role superAdminRole = roleRepository
+                .findByNameAndEmpresaId(StandardRoleTemplates.SUPER_ADMIN, empresa.getId())
+                .orElseThrow();
+        provisionSuperAdmin(empresa.getId(), superAdminRole);
     }
-
-    // ─── Empresa raiz ────────────────────────────────────────────────────────
 
     private Empresa provisionEmpresa() {
         return empresaRepository.findByCnpj(LEXGUARD_CNPJ).orElseGet(() -> {
@@ -76,51 +76,22 @@ public class DataInitializer implements ApplicationRunner {
             e.setCnpj(LEXGUARD_CNPJ);
             e.setContatoEmail(superAdminEmail);
             e.setAtivo(true);
-            // empresa raiz usa empresaId = 0 (sentinel — ela é a própria plataforma)
             e.setEmpresaId(0L);
             Empresa saved = empresaRepository.save(e);
-            log.info("✅  Empresa raiz criada: LexGuard (id={})", saved.getId());
+            log.info("Empresa raiz criada: LexGuard (id={})", saved.getId());
             return saved;
         });
     }
 
-    // ─── Role SUPER_ADMIN ────────────────────────────────────────────────────
-
-    private Role provisionRole(Long empresaId) {
-        return roleRepository.findByNameAndEmpresaId(SUPER_ADMIN_ROLE, empresaId)
-                .map(existing -> {
-                    if (!existing.getPermissions().containsAll(EnumSet.allOf(Permission.class))) {
-                        existing.setPermissions(EnumSet.allOf(Permission.class));
-                        Role saved = roleRepository.save(existing);
-                        log.info("✅  Role '{}' sincronizada com todas as permissões (empresaId={})", SUPER_ADMIN_ROLE,
-                                empresaId);
-                        return saved;
-                    }
-                    return existing;
-                })
-                .orElseGet(() -> {
-                    Role r = new Role();
-                    r.setEmpresaId(empresaId);
-                    r.setName(SUPER_ADMIN_ROLE);
-                    r.setPermissions(EnumSet.allOf(Permission.class));
-                    Role saved = roleRepository.save(r);
-                    log.info("✅  Role '{}' criada com todas as permissões (empresaId={})", SUPER_ADMIN_ROLE,
-                            empresaId);
-                    return saved;
-                });
-    }
-
-    // ─── Usuário super admin ─────────────────────────────────────────────────
-
     private void provisionSuperAdmin(Long empresaId, Role role) {
         usuarioRepository.findByUsernameAndEmpresaId(superAdminUsername, empresaId).ifPresentOrElse(
                 u -> {
-                    if (u.getRoles().stream().noneMatch(r -> SUPER_ADMIN_ROLE.equals(r.getName()))) {
+                    if (u.getRoles().stream().noneMatch(r -> StandardRoleTemplates.SUPER_ADMIN.equals(r.getName()))) {
                         u.getRoles().add(role);
                         usuarioRepository.save(u);
-                        log.info("✅  Role '{}' vinculada ao super admin '{}'", SUPER_ADMIN_ROLE, u.getUsername());
+                        log.info("Perfil SUPER_ADMIN vinculado ao super admin '{}'", u.getUsername());
                     } else {
-                        log.info("ℹ️   Super admin '{}' já existe — nenhuma alteração feita.", u.getUsername());
+                        log.info("Super admin '{}' ja existe.", u.getUsername());
                     }
                 },
                 () -> {
@@ -133,8 +104,8 @@ public class DataInitializer implements ApplicationRunner {
                     u.setAtivo(true);
                     u.getRoles().add(role);
                     usuarioRepository.save(u);
-                    log.info("✅  Super admin criado: username='{}' | empresaId={}", superAdminUsername, empresaId);
-                    log.warn("⚠️   Altere a senha padrão do super admin em produção!");
+                    log.info("Super admin criado: username='{}' | empresaId={}", superAdminUsername, empresaId);
+                    log.warn("Altere a senha padrao do super admin em producao!");
                 });
     }
 }

@@ -9,10 +9,13 @@ import com.jaasielsilva.lexguard.repository.UsuarioRepository;
 import com.jaasielsilva.lexguard.tenant.TenantContext;
 import jakarta.validation.Valid;
 import java.time.Instant;
+import java.util.Set;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -54,8 +57,7 @@ public class AuthController {
                 .orElse(null);
 
         if (usuario == null) {
-            return ResponseEntity.status(401)
-                    .body(new AuthResponse("", "", null, "Credenciais inválidas"));
+            return ResponseEntity.status(401).body(AuthResponse.error("Credenciais inválidas"));
         }
 
         Long empresaId = usuario.getEmpresaId();
@@ -63,22 +65,19 @@ public class AuthController {
 
         try {
             // 2. Autentica com Spring Security (valida a senha via BCrypt)
-            authenticationManager.authenticate(
+            Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-            // 3. Carrega UserDetails já com o TenantContext setado
             var userDetails = userDetailsService.loadUserByUsername(request.getUsername());
 
-            // 4. Gera tokens
             String accessToken = tokenProvider.generateAccessToken(userDetails, empresaId);
             String refreshToken = tokenProvider.generateRefreshToken(userDetails, empresaId);
 
-            return ResponseEntity.ok(
-                    new AuthResponse(accessToken, refreshToken, empresaId, "Autenticado com sucesso"));
+            return ResponseEntity.ok(buildSuccessResponse(
+                    accessToken, refreshToken, empresaId, "Autenticado com sucesso", authentication.getAuthorities()));
 
         } catch (AuthenticationException ex) {
-            return ResponseEntity.status(401)
-                    .body(new AuthResponse("", "", null, "Credenciais inválidas"));
+            return ResponseEntity.status(401).body(AuthResponse.error("Credenciais inválidas"));
         } finally {
             TenantContext.clear();
         }
@@ -87,27 +86,40 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
         if (!tokenProvider.validateToken(request.getRefreshToken())) {
-            return ResponseEntity.badRequest()
-                    .body(new AuthResponse("", "", null, "Refresh token inválido"));
+            return ResponseEntity.badRequest().body(AuthResponse.error("Refresh token inválido"));
         }
 
         Long empresaId = tokenProvider.getEmpresaId(request.getRefreshToken());
         String username = tokenProvider.getUsername(request.getRefreshToken());
 
         if (tokenBlacklistRepository.findByTokenAndEmpresaId(request.getRefreshToken(), empresaId).isPresent()) {
-            return ResponseEntity.status(401)
-                    .body(new AuthResponse("", "", null, "Refresh token bloqueado"));
+            return ResponseEntity.status(401).body(AuthResponse.error("Refresh token bloqueado"));
         }
 
         TenantContext.setEmpresaId(empresaId);
         try {
             var userDetails = userDetailsService.loadUserByUsername(username);
             String token = tokenProvider.generateAccessToken(userDetails, empresaId);
-            return ResponseEntity.ok(
-                    new AuthResponse(token, request.getRefreshToken(), empresaId, "Token renovado"));
+            return ResponseEntity.ok(buildSuccessResponse(
+                    token,
+                    request.getRefreshToken(),
+                    empresaId,
+                    "Token renovado",
+                    userDetails.getAuthorities()));
         } finally {
             TenantContext.clear();
         }
+    }
+
+    private AuthResponse buildSuccessResponse(
+            String accessToken,
+            String refreshToken,
+            Long empresaId,
+            String message,
+            java.util.Collection<? extends GrantedAuthority> authorities) {
+        Set<String> roles = AuthorityUtils.extractRoleNames(authorities);
+        Set<String> permissions = AuthorityUtils.extractPermissions(authorities);
+        return AuthResponse.success(accessToken, refreshToken, empresaId, message, roles, permissions);
     }
 
     @PostMapping("/logout")

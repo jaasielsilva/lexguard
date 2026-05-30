@@ -1,0 +1,11 @@
+@import '../list/usuarios-list.component.scss';
+
+.btn-sm {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+.mono {
+    font-size: 0.8rem;
+    color: var(--text-muted, #6c757d);
+}
