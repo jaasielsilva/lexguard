@@ -1,8 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ValidationErrors, Validators } from '@angular/forms';
 import { getApiErrorMessage } from '../../../../core/utils/api-error.util';
+import { cnpjFormat, cnpjMask, cnpjOnlyDigits, cnpjValid } from '../../../../core/utils/cnpj.util';
 import { EmpresaRequest, EmpresaResponse } from '../../models/empresa.model';
 import { EmpresasService } from '../../services/empresas.service';
+
+/** Validator que usa o algoritmo oficial de dígitos verificadores. */
+function cnpjValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value ?? '';
+    if (!value) return null; // deixa o Validators.required cuidar do vazio
+    return cnpjValid(value) ? null : { cnpjInvalido: true };
+}
 
 @Component({
     selector: 'app-empresas-list',
@@ -18,14 +26,12 @@ export class EmpresasListComponent implements OnInit {
     success = '';
     search = '';
 
-    // Modal de criação/edição
     formVisivel = false;
     editando: EmpresaResponse | null = null;
     formError = '';
     saving = false;
     form: FormGroup;
 
-    // Modal de confirmação toggle
     confirmVisivel = false;
     confirmTarget: EmpresaResponse | null = null;
     confirmLoading = false;
@@ -36,7 +42,7 @@ export class EmpresasListComponent implements OnInit {
     ) {
         this.form = this.fb.group({
             nome: ['', [Validators.required, Validators.minLength(3)]],
-            cnpj: ['', [Validators.required, Validators.pattern(/^\d{14}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/)]],
+            cnpj: ['', [Validators.required, cnpjValidator]],
             contatoEmail: ['', [Validators.required, Validators.email]],
         });
     }
@@ -70,6 +76,16 @@ export class EmpresasListComponent implements OnInit {
         );
     }
 
+    // ── Máscara ao digitar ────────────────────────────────────────────────────
+
+    onCnpjInput(event: Event): void {
+        const input = event.target as HTMLInputElement;
+        const masked = cnpjMask(input.value);
+        // Atualiza o controle sem disparar novo evento (evita loop)
+        this.form.get('cnpj')!.setValue(masked, { emitEvent: false });
+        input.value = masked;
+    }
+
     // ── Formulário ────────────────────────────────────────────────────────────
 
     abrirNovo(): void {
@@ -84,7 +100,7 @@ export class EmpresasListComponent implements OnInit {
         this.editando = empresa;
         this.form.patchValue({
             nome: empresa.nome,
-            cnpj: empresa.cnpj,
+            cnpj: cnpjFormat(empresa.cnpj),
             contatoEmail: empresa.contatoEmail,
         });
         this.formError = '';
@@ -109,7 +125,13 @@ export class EmpresasListComponent implements OnInit {
         this.saving = true;
         this.formError = '';
 
-        const payload: EmpresaRequest = this.form.value;
+        // Envia apenas os dígitos para o backend
+        const raw = this.form.value;
+        const payload: EmpresaRequest = {
+            ...raw,
+            cnpj: cnpjOnlyDigits(raw.cnpj),
+        };
+
         const op = this.editando
             ? this.service.update(this.editando.id, payload)
             : this.service.create(payload);
@@ -166,9 +188,7 @@ export class EmpresasListComponent implements OnInit {
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     formatCnpj(cnpj: string): string {
-        const d = cnpj.replace(/\D/g, '');
-        if (d.length !== 14) return cnpj;
-        return `${d.slice(0, 2)}.${d.slice(2, 5)}.${d.slice(5, 8)}/${d.slice(8, 12)}-${d.slice(12)}`;
+        return cnpjFormat(cnpj);
     }
 
     get f() { return this.form.controls; }

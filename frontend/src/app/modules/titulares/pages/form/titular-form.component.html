@@ -25,27 +25,35 @@
                 <div class="field-group" [class.field-error]="f['nome'].invalid && f['nome'].touched">
                     <label>Nome completo *</label>
                     <input type="text" formControlName="nome" placeholder="Nome do titular" />
-                    <span class="field-hint" *ngIf="f['nome'].invalid && f['nome'].touched">Nome é obrigatório (mín. 3
-                        caracteres).</span>
+                    <span class="field-hint" *ngIf="f['nome'].invalid && f['nome'].touched">
+                        Nome é obrigatório (mín. 3 caracteres).
+                    </span>
                 </div>
 
                 <div class="field-group" [class.field-error]="f['cpf'].invalid && f['cpf'].touched">
                     <label>CPF *</label>
-                    <input type="text" formControlName="cpf" placeholder="000.000.000-00" mask="000.000.000-00"
-                        [attr.disabled]="isEdit ? '' : null" />
-                    <span class="field-hint" *ngIf="f['cpf'].invalid && f['cpf'].touched">CPF é obrigatório.</span>
+                    <input type="text" formControlName="cpf" placeholder="000.000.000-00" maxlength="14"
+                        autocomplete="off" (input)="onCpfInput($event)" [attr.readonly]="isEdit ? true : null" />
+                    <span class="field-hint" *ngIf="f['cpf'].errors?.['required'] && f['cpf'].touched">
+                        CPF é obrigatório.
+                    </span>
+                    <span class="field-hint" *ngIf="f['cpf'].errors?.['cpfInvalido'] && f['cpf'].touched">
+                        CPF inválido. Verifique os dígitos.
+                    </span>
                 </div>
 
                 <div class="field-group" [class.field-error]="f['email'].invalid && f['email'].touched">
                     <label>E-mail *</label>
                     <input type="email" formControlName="email" placeholder="email@exemplo.com" />
-                    <span class="field-hint" *ngIf="f['email'].invalid && f['email'].touched">E-mail válido é
-                        obrigatório.</span>
+                    <span class="field-hint" *ngIf="f['email'].invalid && f['email'].touched">
+                        E-mail válido é obrigatório.
+                    </span>
                 </div>
 
                 <div class="field-group">
                     <label>Telefone</label>
-                    <input type="text" formControlName="telefone" placeholder="(00) 00000-0000" />
+                    <input type="text" formControlName="telefone" placeholder="(00) 00000-0000" maxlength="15"
+                        autocomplete="off" (input)="onTelefoneInput($event)" />
                 </div>
 
                 <div class="field-group">
@@ -61,8 +69,10 @@
             <div class="form-footer">
                 <a routerLink="/dashboard/titulares" class="btn-secondary">Cancelar</a>
                 <button type="submit" class="btn-primary" [disabled]="saving">
-                    <span *ngIf="!saving"><i class="bi bi-check-lg"></i> {{ isEdit ? 'Salvar alterações' : 'Cadastrar'
-                        }}</span>
+                    <span *ngIf="!saving">
+                        <i class="bi bi-check-lg"></i>
+                        {{ isEdit ? 'Salvar alterações' : 'Cadastrar' }}
+                    </span>
                     <span *ngIf="saving"><span class="spinner-sm"></span> Salvando...</span>
                 </button>
             </div>
